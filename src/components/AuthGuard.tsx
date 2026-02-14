@@ -11,12 +11,16 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { login, validateSession } = useAuthStore()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
+  const accessUsername = import.meta.env.VITE_ACCESS_USERNAME
   const accessPassword = import.meta.env.VITE_ACCESS_PASSWORD
-  const isProtectionEnabled = !!accessPassword && accessPassword.trim() !== ''
+  const hasUsername = !!accessUsername && accessUsername.trim() !== ''
+  const hasPassword = !!accessPassword && accessPassword.trim() !== ''
+  const isProtectionEnabled = hasUsername || hasPassword
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -30,28 +34,24 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     checkAuth()
   }, [validateSession, isProtectionEnabled])
 
-  // While checking auth status, show nothing or a loading spinner?
-  // Showing nothing avoids flash of content.
   if (isProtectionEnabled && isAuthenticated === null) {
     return null
   }
 
-  // If protection disabled or authenticated, show children
   if (!isProtectionEnabled || isAuthenticated) {
     return <>{children}</>
   }
 
   const handleLogin = async () => {
     setIsLoading(true)
-    // Small artificial delay for better UX
     await new Promise(resolve => setTimeout(resolve, 600))
 
-    const success = await login(password)
+    const success = await login(username, password)
     if (success) {
       setIsAuthenticated(true)
       toast.success('验证成功')
     } else {
-      toast.error('验证失败')
+      toast.error('验证失败，请检查用户名或密码')
       setIsLoading(false)
     }
   }
@@ -82,25 +82,45 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
           <div className="text-center">
             <h1 className="mb-2 text-2xl font-bold text-gray-900 drop-shadow-sm">访问受限</h1>
-            <p className="text-gray-500">当前站点通过密码保护，请输入访问密码</p>
+            <p className="text-gray-500">当前站点需要验证身份，请输入登录信息</p>
           </div>
 
           <div className="w-full space-y-4">
-            <Input
-              type="password"
-              placeholder="请输入访问密码"
-              value={password}
-              onValueChange={setPassword}
-              onKeyDown={handleKeyDown}
-              size="lg"
-              variant="bordered"
-              classNames={{
-                inputWrapper:
-                  'bg-black/5 border-black/10 hover:border-black/20 focus-within:!border-black/40 text-black shadow-inner',
-                input: 'text-black placeholder:text-gray-400',
-              }}
-              isClearable
-            />
+            {hasUsername && (
+              <Input
+                type="text"
+                placeholder="请输入用户名"
+                value={username}
+                onValueChange={setUsername}
+                onKeyDown={handleKeyDown}
+                size="lg"
+                variant="bordered"
+                classNames={{
+                  inputWrapper:
+                    'bg-black/5 border-black/10 hover:border-black/20 focus-within:!border-black/40 text-black shadow-inner',
+                  input: 'text-black placeholder:text-gray-400',
+                }}
+                isClearable
+              />
+            )}
+
+            {hasPassword && (
+              <Input
+                type="password"
+                placeholder="请输入访问密码"
+                value={password}
+                onValueChange={setPassword}
+                onKeyDown={handleKeyDown}
+                size="lg"
+                variant="bordered"
+                classNames={{
+                  inputWrapper:
+                    'bg-black/5 border-black/10 hover:border-black/20 focus-within:!border-black/40 text-black shadow-inner',
+                  input: 'text-black placeholder:text-gray-400',
+                }}
+                isClearable
+              />
+            )}
 
             <Button
               className="w-full bg-black font-bold text-white shadow-lg hover:bg-gray-800"

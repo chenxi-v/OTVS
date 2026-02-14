@@ -34,6 +34,8 @@ interface ApiActions {
   getSelectedAPIs: () => VideoApi[]
   // 重置视频源
   resetVideoSources: () => Promise<void>
+  // 设置视频源（用于云端同步）
+  setApis: (apis: VideoApi[]) => void
 }
 
 type ApiStore = ApiState & ApiActions
@@ -147,6 +149,12 @@ export const useApiStore = create<ApiStore>()(
             state.videoAPIs = []
           })
           await get().initializeEnvSources()
+        },
+
+        setApis: (apis: VideoApi[]) => {
+          set(state => {
+            state.videoAPIs = apis
+          })
         },
       })),
       {

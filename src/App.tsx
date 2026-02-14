@@ -2,7 +2,7 @@ import { OkiLogo, SearchIcon, SettingIcon, CloseIcon } from '@/components/icons'
 import { Button, Input, Chip, Popover, PopoverTrigger, PopoverContent } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSearchHistory, useSearch } from '@/hooks'
+import { useSearchHistory, useSearch, useCloudSync } from '@/hooks'
 
 import { useSettingStore } from '@/store/settingStore'
 
@@ -16,6 +16,9 @@ import { useVersionStore } from '@/store/versionStore'
 const UpdateModal = React.lazy(() => import('@/components/UpdateModal'))
 
 function App() {
+  // 云端数据同步
+  useCloudSync()
+
   // 路由控制
   const navigate = useNavigate()
   // 删除控制

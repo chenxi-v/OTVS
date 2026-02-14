@@ -37,28 +37,41 @@ interface HealthStatus {
 
 class DbService {
   private baseUrl = '/api/db'
-  private userId: string
 
-  constructor() {
-    this.userId = this.getOrCreateUserId()
+  private getUserId(): string | null {
+    const authStorage = sessionStorage.getItem('auth-storage')
+    if (!authStorage) {
+      return null
+    }
+
+    try {
+      const parsed = JSON.parse(authStorage)
+      const username = parsed?.state?.username
+      if (username) {
+        return `user:${username}`
+      }
+    } catch {
+      return null
+    }
+
+    return null
   }
 
-  private getOrCreateUserId(): string {
-    const storedUserId = localStorage.getItem('ouonnki-tv-user-id')
-    if (storedUserId) {
-      return storedUserId
-    }
-    const newUserId = crypto.randomUUID()
-    localStorage.setItem('ouonnki-tv-user-id', newUserId)
-    return newUserId
+  isCloudSyncEnabled(): boolean {
+    return this.getUserId() !== null
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const userId = this.getUserId()
+    if (!userId) {
+      throw new Error('Cloud sync not enabled: user not authenticated')
+    }
+
     const response = await fetch(`${this.baseUrl}/${path}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': this.userId,
+        'X-User-Id': userId,
         ...options.headers,
       },
     })

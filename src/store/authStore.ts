@@ -4,18 +4,19 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 interface AuthState {
   sessionToken: string | null
   salt: string | null
+  username: string | null
   isInitialized: boolean
 }
 
 interface AuthActions {
-  login: (password: string) => Promise<boolean>
+  login: (username: string, password: string) => Promise<boolean>
   logout: () => void
   validateSession: () => Promise<boolean>
+  getCurrentUsername: () => string | null
 }
 
 type AuthStore = AuthState & AuthActions
 
-// Helper to generate a random salt
 const generateSalt = () => {
   const array = new Uint8Array(16)
   window.crypto.getRandomValues(array)
@@ -24,7 +25,6 @@ const generateSalt = () => {
     .join('')
 }
 
-// Helper to compute SHA-256 hash
 const computeHash = async (message: string) => {
   const msgBuffer = new TextEncoder().encode(message)
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
@@ -37,55 +37,81 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       sessionToken: null,
       salt: null,
+      username: null,
       isInitialized: false,
 
-      login: async (password: string) => {
+      login: async (username: string, password: string) => {
+        const correctUsername = import.meta.env.VITE_ACCESS_USERNAME
         const correctPassword = import.meta.env.VITE_ACCESS_PASSWORD
-        // If no password configured, always allow
-        if (!correctPassword) {
+
+        const hasUsername = !!correctUsername && correctUsername.trim() !== ''
+        const hasPassword = !!correctPassword && correctPassword.trim() !== ''
+
+        if (!hasUsername && !hasPassword) {
           return true
         }
 
-        if (password === correctPassword) {
-          const salt = generateSalt()
-          const token = await computeHash(correctPassword + salt)
-          set({ sessionToken: token, salt, isInitialized: true })
-          return true
+        if (hasUsername && username !== correctUsername) {
+          return false
         }
-        return false
+
+        if (hasPassword && password !== correctPassword) {
+          return false
+        }
+
+        const salt = generateSalt()
+        const token = await computeHash((correctUsername || '') + (correctPassword || '') + salt)
+        set({
+          sessionToken: token,
+          salt,
+          username: username || null,
+          isInitialized: true,
+        })
+        return true
       },
 
-      logout: () => set({ sessionToken: null, salt: null, isInitialized: true }),
+      logout: () => set({ sessionToken: null, salt: null, username: null, isInitialized: true }),
 
       validateSession: async () => {
         const { sessionToken, salt } = get()
+        const correctUsername = import.meta.env.VITE_ACCESS_USERNAME
         const correctPassword = import.meta.env.VITE_ACCESS_PASSWORD
 
-        // If no password configured, always valid
-        if (!correctPassword) {
+        const hasUsername = !!correctUsername && correctUsername.trim() !== ''
+        const hasPassword = !!correctPassword && correctPassword.trim() !== ''
+
+        if (!hasUsername && !hasPassword) {
           return true
         }
 
-        // If no token or salt, invalid
         if (!sessionToken || !salt) {
           return false
         }
 
-        // Re-compute hash to verify
-        const expectedToken = await computeHash(correctPassword + salt)
+        const expectedToken = await computeHash((correctUsername || '') + (correctPassword || '') + salt)
         if (sessionToken === expectedToken) {
           return true
         } else {
-          // Invalid token (tampered or changed password), clear it
-          set({ sessionToken: null, salt: null })
+          set({ sessionToken: null, salt: null, username: null })
           return false
         }
+      },
+
+      getCurrentUsername: () => {
+        const { username } = get()
+        const correctUsername = import.meta.env.VITE_ACCESS_USERNAME
+        const hasUsername = !!correctUsername && correctUsername.trim() !== ''
+
+        if (!hasUsername) {
+          return null
+        }
+        return username
       },
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => sessionStorage),
-      partialize: state => ({ sessionToken: state.sessionToken, salt: state.salt }),
+      partialize: state => ({ sessionToken: state.sessionToken, salt: state.salt, username: state.username }),
     },
   ),
 )

@@ -16,6 +16,8 @@ interface ViewingHistoryActions {
   removeViewingHistory: (item: ViewingHistoryItem) => void
   // 清空观看历史
   clearViewingHistory: () => void
+  // 设置观看历史（用于云端同步）
+  setViewingHistory: (history: ViewingHistoryItem[]) => void
 }
 
 type ViewingHistoryStore = ViewingHistoryState & ViewingHistoryActions
@@ -77,6 +79,12 @@ export const useViewingHistoryStore = create<ViewingHistoryStore>()(
         clearViewingHistory: () => {
           set(state => {
             state.viewingHistory = []
+          })
+        },
+
+        setViewingHistory: (history: ViewingHistoryItem[]) => {
+          set(state => {
+            state.viewingHistory = history
           })
         },
       })),

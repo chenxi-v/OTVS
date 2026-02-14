@@ -48,6 +48,14 @@ interface SettingActions {
 
   // Reset
   resetSettings: () => void
+
+  // Set all settings (for cloud sync)
+  setAllSettings: (settings: {
+    network?: NetworkSettings
+    search?: SearchSettings
+    playback?: PlaybackSettings
+    system?: SystemSettings
+  }) => void
 }
 
 type SettingStore = SettingState & SettingActions
@@ -91,6 +99,15 @@ export const useSettingStore = create<SettingStore>()(
             state.search = DEFAULT_SETTINGS.search
             state.playback = DEFAULT_SETTINGS.playback
             state.system = DEFAULT_SETTINGS.system
+          })
+        },
+
+        setAllSettings: settings => {
+          set(state => {
+            if (settings.network) state.network = settings.network
+            if (settings.search) state.search = settings.search
+            if (settings.playback) state.playback = settings.playback
+            if (settings.system) state.system = settings.system
           })
         },
       })),
