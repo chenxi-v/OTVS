@@ -302,13 +302,13 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
                     'https://via.placeholder.com/300x400?text=暂无封面'
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               {video.vod_remarks && (
-                <div className="absolute right-2 top-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white shadow-lg">
+                <div className="absolute right-2 top-2 hidden rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white shadow-lg sm:block">
                   {video.vod_remarks}
                 </div>
               )}
-              <div className="absolute bottom-0 left-0 right-0 p-3">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:bg-gradient-to-t sm:from-black/80 sm:via-black/20 sm:to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 hidden p-3 sm:block">
                 <h4 className="line-clamp-2 text-sm font-bold leading-tight text-white drop-shadow-lg">
                   {video.vod_name}
                 </h4>
@@ -324,6 +324,32 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
                     </span>
                   )}
                 </div>
+              </div>
+            </div>
+            <div className="p-2 sm:hidden">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h4 className="line-clamp-1 text-sm font-bold leading-tight text-gray-800 dark:text-white">
+                    {video.vod_name}
+                  </h4>
+                  <div className="mt-1 flex items-center gap-2">
+                    {video.vod_year && (
+                      <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        {video.vod_year}
+                      </span>
+                    )}
+                    {video.type_name && (
+                      <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        {video.type_name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {video.vod_remarks && (
+                  <span className="shrink-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white shadow-lg">
+                    {video.vod_remarks}
+                  </span>
+                )}
               </div>
             </div>
           </motion.div>

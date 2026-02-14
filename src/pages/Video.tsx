@@ -253,7 +253,7 @@ export default function Video() {
       setting: true,
       loop: false,
       flip: true,
-      playbackRate: true,
+      playbackRate: false,
       aspectRatio: true,
       fullscreen: true,
       fullscreenWeb: true,

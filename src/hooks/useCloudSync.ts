@@ -6,6 +6,8 @@ import { useApiStore } from '@/store/apiStore'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from 'sonner'
 
+const SESSION_KEY = 'cloud_sync_shown'
+
 export function useCloudSync() {
   const { username } = useAuthStore()
   const isSyncEnabled = dbService.isCloudSyncEnabled()
@@ -16,6 +18,7 @@ export function useCloudSync() {
 
   const isInitialized = useRef(false)
   const isSyncing = useRef(false)
+  const hasShownSuccessToast = useRef(false)
 
   const pullFromCloud = useCallback(async () => {
     if (!isSyncEnabled || isSyncing.current) return
@@ -36,9 +39,16 @@ export function useCloudSync() {
         setApis(cloudData.videoApis)
       }
 
-      toast.success('数据同步成功')
+      if (!hasShownSuccessToast.current && !sessionStorage.getItem(SESSION_KEY)) {
+        toast.success('数据同步成功')
+        hasShownSuccessToast.current = true
+        sessionStorage.setItem(SESSION_KEY, 'true')
+      }
     } catch (error) {
       console.error('Failed to pull data from cloud:', error)
+      hasShownSuccessToast.current = false
+      sessionStorage.removeItem(SESSION_KEY)
+      toast.error('数据同步失败，请检查网络连接')
     } finally {
       isSyncing.current = false
     }
@@ -59,6 +69,8 @@ export function useCloudSync() {
       }
     } catch (error) {
       console.error('Failed to push data to cloud:', error)
+      hasShownSuccessToast.current = false
+      sessionStorage.removeItem(SESSION_KEY)
     } finally {
       isSyncing.current = false
     }

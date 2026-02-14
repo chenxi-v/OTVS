@@ -226,12 +226,17 @@
   }
 
   .art-video-player .art-progress {
-    height: 3px !important;
+    height: 2px !important;
   }
 
   .art-video-player.art-hover .art-progress,
   .art-video-player.art-control-show .art-progress {
-    height: 5px !important;
+    height: 3px !important;
+  }
+
+  .art-video-player .art-progress .art-progress-dot {
+    width: 10px;
+    height: 10px;
   }
 }
 
