@@ -315,18 +315,18 @@ export default function VideoSourceForm({ sourceInfo }: { sourceInfo: VideoApi }
               </span>
             </AlertDialogTrigger>
             <AlertDialogContent
-              className="h-fit bg-white/20 backdrop-blur-md"
-              overlayClassName="bg-white/40 backdrop-blur-xs"
+              className="h-fit bg-white/20 backdrop-blur-md dark:bg-gray-900"
+              overlayClassName="bg-white/40 backdrop-blur-xs dark:bg-black/40"
             >
               <AlertDialogHeader>
-                <AlertDialogTitle>确定要删除本视频源吗？</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="dark:text-white">确定要删除本视频源吗？</AlertDialogTitle>
+                <AlertDialogDescription className="dark:text-gray-300">
                   此操作无法撤销，确认后将<span className="text-red-600">永久删除</span>
                   本视频源，请谨慎操作。
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="border-0 bg-transparent shadow-none outline-0 hover:bg-transparent hover:text-gray-600">
+                <AlertDialogCancel className="border-0 bg-transparent shadow-none outline-0 hover:bg-transparent hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100">
                   取消
                 </AlertDialogCancel>
                 <AlertDialogAction

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
-import { DEFAULT_SETTINGS } from '@/config/settings.config'
+import { DEFAULT_SETTINGS, type ThemeMode } from '@/config/settings.config'
 
 interface NetworkSettings {
   defaultTimeout: number
@@ -30,12 +30,17 @@ interface HomeSettings {
   defaultDataSourceId: string
 }
 
+interface ThemeSettings {
+  mode: ThemeMode
+}
+
 interface SettingState {
   network: NetworkSettings
   search: SearchSettings
   playback: PlaybackSettings
   system: SystemSettings
   home: HomeSettings
+  theme: ThemeSettings
 }
 
 interface SettingActions {
@@ -44,6 +49,7 @@ interface SettingActions {
   setPlaybackSettings: (settings: Partial<PlaybackSettings>) => void
   setSystemSettings: (settings: Partial<SystemSettings>) => void
   setHomeSettings: (settings: Partial<HomeSettings>) => void
+  setThemeSettings: (settings: Partial<ThemeSettings>) => void
   resetSettings: () => void
   setAllSettings: (settings: {
     network?: NetworkSettings
@@ -51,6 +57,7 @@ interface SettingActions {
     playback?: PlaybackSettings
     system?: SystemSettings
     home?: HomeSettings
+    theme?: ThemeSettings
   }) => void
 }
 
@@ -65,6 +72,7 @@ export const useSettingStore = create<SettingStore>()(
         playback: DEFAULT_SETTINGS.playback,
         system: DEFAULT_SETTINGS.system,
         home: DEFAULT_SETTINGS.home,
+        theme: DEFAULT_SETTINGS.theme,
 
         setNetworkSettings: settings => {
           set(state => {
@@ -96,6 +104,12 @@ export const useSettingStore = create<SettingStore>()(
           })
         },
 
+        setThemeSettings: settings => {
+          set(state => {
+            state.theme = { ...state.theme, ...settings }
+          })
+        },
+
         resetSettings: () => {
           set(state => {
             state.network = DEFAULT_SETTINGS.network
@@ -103,6 +117,7 @@ export const useSettingStore = create<SettingStore>()(
             state.playback = DEFAULT_SETTINGS.playback
             state.system = DEFAULT_SETTINGS.system
             state.home = DEFAULT_SETTINGS.home
+            state.theme = DEFAULT_SETTINGS.theme
           })
         },
 
@@ -113,16 +128,20 @@ export const useSettingStore = create<SettingStore>()(
             if (settings.playback) state.playback = settings.playback
             if (settings.system) state.system = settings.system
             if (settings.home) state.home = settings.home
+            if (settings.theme) state.theme = settings.theme
           })
         },
       })),
       {
         name: 'ouonnki-tv-setting-store',
-        version: 2,
+        version: 3,
         migrate: (persistedState: unknown, version: number) => {
           const state = persistedState as Partial<SettingState>
           if (version < 2) {
             state.home = DEFAULT_SETTINGS.home
+          }
+          if (version < 3) {
+            state.theme = DEFAULT_SETTINGS.theme
           }
           return state
         },

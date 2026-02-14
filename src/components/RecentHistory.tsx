@@ -1,4 +1,4 @@
-import { CloseIcon, NoItemIcon, RecentIcon, TrashIcon } from '@/components/icons'
+import { CloseIcon, NoItemIcon, TrashIcon } from '@/components/icons'
 import { Card, Chip, Image, Tooltip, Progress } from '@heroui/react'
 import { ScrollShadow } from '@heroui/react'
 import { useViewingHistoryStore } from '@/store/viewingHistoryStore'
@@ -13,6 +13,7 @@ import { isBrowser } from 'react-device-detect'
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
 import type { ViewingHistoryItem } from '@/types'
+import { History } from 'lucide-react'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -201,7 +202,7 @@ export default function RecentHistory() {
           onClick={isBrowser ? undefined : () => setIsOpen(!isOpen)}
           className="flex h-full w-full items-center justify-center"
         >
-          <RecentIcon size={24} />
+          <History size={22} className="text-gray-700 dark:text-gray-200" />
         </div>
       </Tooltip>
       {!isBrowser &&

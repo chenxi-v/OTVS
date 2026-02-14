@@ -8,13 +8,14 @@ import { Button, Spinner, Tooltip, Select, SelectItem } from '@heroui/react'
 import { useDocumentTitle } from '@/hooks'
 import { ArrowUpIcon, ArrowDownIcon } from '@/components/icons'
 import { motion } from 'framer-motion'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Sun, Moon, Monitor } from 'lucide-react'
+import { type ThemeMode } from '@/config/settings.config'
 
 export default function Detail() {
   const { sourceCode, vodId } = useParams<{ sourceCode: string; vodId: string }>()
   const navigate = useNavigate()
   const { videoAPIs } = useApiStore()
-  const { playback } = useSettingStore()
+  const { playback, theme, setThemeSettings } = useSettingStore()
 
   const [detail, setDetail] = useState<DetailResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -182,7 +183,7 @@ export default function Detail() {
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="mt-4 text-gray-500">正在加载视频详情...</p>
+          <p className="mt-4 text-gray-500 dark:text-gray-400">正在加载视频详情...</p>
         </div>
       </div>
     )
@@ -191,8 +192,8 @@ export default function Detail() {
   if (!detail || detail.code !== 200) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="rounded-2xl bg-white/40 p-8 text-center shadow-xl backdrop-blur-xl">
-          <p className="mb-4 text-gray-500">获取视频详情失败</p>
+        <div className="rounded-2xl bg-white/40 p-8 text-center shadow-xl backdrop-blur-xl dark:bg-white/10">
+          <p className="mb-4 text-gray-500 dark:text-gray-400">获取视频详情失败</p>
           <Button
             className="bg-gradient-to-r from-blue-500 to-purple-500 font-medium text-white"
             onPress={() => navigate(-1)}
@@ -206,12 +207,34 @@ export default function Detail() {
 
   return (
     <div className="container mx-auto max-w-6xl overflow-x-hidden p-2 pb-20 sm:p-4 md:pt-8">
+      {/* 主题切换按钮 - 固定在右上角 */}
+      <div className="fixed top-5 right-5 z-50">
+        <Button
+          onPress={() => {
+            const modes: ThemeMode[] = ['light', 'dark', 'system']
+            const currentIndex = modes.indexOf(theme.mode)
+            const nextIndex = (currentIndex + 1) % modes.length
+            setThemeSettings({ mode: modes[nextIndex] })
+          }}
+          isIconOnly
+          className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
+        >
+          {theme.mode === 'light' ? (
+            <Sun size={22} className="text-gray-700 dark:text-gray-200" />
+          ) : theme.mode === 'dark' ? (
+            <Moon size={22} className="text-gray-700 dark:text-gray-200" />
+          ) : (
+            <Monitor size={22} className="text-gray-700 dark:text-gray-200" />
+          )}
+        </Button>
+      </div>
+
       {/* 顶部导航栏 */}
       <div className="mb-4 flex items-center justify-end">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             variant="ghost"
-            className="gap-2 rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+            className="gap-2 rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
             onPress={() => navigate(-1)}
           >
             <ArrowLeft size={18} />
@@ -245,7 +268,7 @@ export default function Detail() {
 
         {/* 详细信息 */}
         <motion.div
-          className="flex-1 overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl"
+          className="flex-1 overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl dark:bg-white/10"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -268,7 +291,7 @@ export default function Detail() {
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
                 {getTitle() && (
-                  <h1 className="line-clamp-2 text-lg font-bold leading-tight text-gray-900">
+                  <h1 className="line-clamp-2 text-lg font-bold leading-tight text-gray-900 dark:text-white">
                     {getTitle()}
                   </h1>
                 )}
@@ -279,31 +302,31 @@ export default function Detail() {
                     </span>
                   )}
                   {getYear() && (
-                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                       {getYear()}
                     </span>
                   )}
                   {getType() && (
-                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                       {getType()}
                     </span>
                   )}
                   {getArea() && (
-                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                       {getArea()}
                     </span>
                   )}
                 </div>
-                <div className="mt-1 text-xs text-gray-600">
+                <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
                   {getDirector() && (
                     <p className="line-clamp-1">
-                      <span className="font-medium text-gray-800">导演：</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">导演：</span>
                       {getDirector()}
                     </p>
                   )}
                   {getActor() && (
                     <p className="line-clamp-2">
-                      <span className="font-medium text-gray-800">演员：</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">演员：</span>
                       {getActor()}
                     </p>
                   )}
@@ -311,9 +334,9 @@ export default function Detail() {
               </motion.div>
             </div>
             {getContent() && (
-              <div className="border-t border-gray-200/50 p-4">
+              <div className="border-t border-gray-200/50 p-4 dark:border-gray-700/50">
                 <div
-                  className="line-clamp-4 text-sm text-gray-600"
+                  className="line-clamp-4 text-sm text-gray-600 dark:text-gray-300"
                   dangerouslySetInnerHTML={{ __html: getContent() }}
                 />
               </div>
@@ -327,7 +350,7 @@ export default function Detail() {
               <div className="mb-4">
                 {getTitle() && (
                   <motion.h1
-                    className="mb-3 text-2xl font-bold text-gray-900"
+                    className="mb-3 text-2xl font-bold text-gray-900 dark:text-white"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.3 }}
@@ -347,17 +370,17 @@ export default function Detail() {
                     </span>
                   )}
                   {getYear() && (
-                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700">
+                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                       {getYear()}
                     </span>
                   )}
                   {getType() && (
-                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700">
+                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                       {getType()}
                     </span>
                   )}
                   {getArea() && (
-                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700">
+                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                       {getArea()}
                     </span>
                   )}
@@ -372,14 +395,14 @@ export default function Detail() {
                 transition={{ duration: 0.5, delay: 0.5 }}
               >
                 {getDirector() && (
-                  <div className="text-gray-600">
-                    <span className="font-semibold text-gray-900">导演：</span>
+                  <div className="text-gray-600 dark:text-gray-300">
+                    <span className="font-semibold text-gray-900 dark:text-white">导演：</span>
                     <span>{getDirector()}</span>
                   </div>
                 )}
                 {getActor() && (
-                  <div className="text-gray-600">
-                    <span className="font-semibold text-gray-900">演员：</span>
+                  <div className="text-gray-600 dark:text-gray-300">
+                    <span className="font-semibold text-gray-900 dark:text-white">演员：</span>
                     <span>{getActor()}</span>
                   </div>
                 )}
@@ -388,14 +411,14 @@ export default function Detail() {
               {/* 简介 */}
               {getContent() && (
                 <motion.div
-                  className="mt-4 rounded-xl bg-gray-50/50 p-4"
+                  className="mt-4 rounded-xl bg-gray-50/50 p-4 dark:bg-gray-800/50"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.6 }}
                 >
-                  <h3 className="mb-2 font-semibold text-gray-900">剧情简介</h3>
+                  <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">剧情简介</h3>
                   <div
-                    className="text-sm leading-relaxed text-gray-600"
+                    className="text-sm leading-relaxed text-gray-600 dark:text-gray-300"
                     dangerouslySetInnerHTML={{ __html: getContent() }}
                   />
                 </motion.div>
@@ -408,18 +431,18 @@ export default function Detail() {
       {/* 播放列表 */}
       {detail?.videoInfo?.episodes_names && detail.videoInfo.episodes_names.length > 0 && (
         <motion.div
-          className="mt-6 overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl"
+          className="mt-6 overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl dark:bg-white/10"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <div className="border-b border-gray-200/50 p-4">
+          <div className="border-b border-gray-200/50 p-4 dark:border-gray-700/50">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-1 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">选集</h2>
-                  <p className="text-xs text-gray-500">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">选集</h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     共 {detail.videoInfo.episodes_names.length} 集
                   </p>
                 </div>
@@ -432,7 +455,7 @@ export default function Detail() {
                   startContent={
                     isReversed ? <ArrowUpIcon size={16} /> : <ArrowDownIcon size={16} />
                   }
-                  className="bg-gray-100 font-medium text-gray-700 hover:bg-gray-200"
+                  className="bg-gray-100 font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 >
                   {isReversed ? '正序' : '倒序'}
                 </Button>
@@ -443,9 +466,9 @@ export default function Detail() {
                     onChange={e => setCurrentPageRange(e.target.value)}
                     className="w-28"
                     classNames={{
-                      trigger: 'bg-gray-100 border-none font-medium',
-                      value: 'text-gray-700',
-                      popoverContent: 'bg-white/90 backdrop-blur-xl border border-gray-200/50',
+                      trigger: 'bg-gray-100 border-none font-medium dark:bg-gray-700',
+                      value: 'text-gray-700 dark:text-gray-200',
+                      popoverContent: 'bg-white/90 backdrop-blur-xl border border-gray-200/50 dark:bg-gray-800/90',
                     }}
                     aria-label="选择集数范围"
                   >
@@ -474,7 +497,7 @@ export default function Detail() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handlePlayEpisode(displayIndex)}
-                    className="relative w-full overflow-hidden rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-md"
+                    className="relative w-full overflow-hidden rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-md dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                   >
                     <span className="relative z-10 block overflow-hidden text-ellipsis whitespace-nowrap">
                       {name}

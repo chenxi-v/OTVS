@@ -22,8 +22,8 @@ export default function SideBar({
           whileTap={{ scale: 0.98 }}
           className={`relative flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-4 transition-all duration-300 ${
             activeId === module.id
-              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25 dark:from-red-600 dark:to-red-500 dark:shadow-red-500/25'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
           } ${module.id === 'about_project' ? 'md:mt-auto' : ''}`}
           onClick={() => onSelect(module.id)}
         >

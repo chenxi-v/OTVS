@@ -9,25 +9,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Play, Eye, SkipForward, Filter, SortAsc } from 'lucide-react'
 
 export default function PlaybackSettings() {
   const { playback, setPlaybackSettings } = useSettingStore()
   const { adFilteringEnabled, setAdFilteringEnabled } = useApiStore()
 
   return (
-    <div className="flex flex-col gap-6 px-4 md:px-0">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-gray-800">播放设置</h1>
-        <p className="text-xs text-gray-500">自定义播放体验和观看习惯</p>
+    <div className="flex flex-col gap-4">
+      <div className="overflow-hidden rounded-2xl bg-white/40 p-4 shadow-lg shadow-black/5 backdrop-blur-xl dark:bg-gray-900/80">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg dark:from-red-600 dark:to-red-500">
+            <Play size={20} className="text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">播放设置</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">自定义播放体验和观看习惯</p>
+          </div>
+        </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white/40 p-4 backdrop-blur-md md:p-6">
-        <h2 className="mb-4 text-sm font-medium text-gray-900">通用</h2>
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base">开启观看记录</Label>
-              <p className="text-sm text-gray-500">自动记录您的观看进度</p>
+      <div className="overflow-hidden rounded-2xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl dark:bg-gray-900/80">
+        <div className="border-b border-gray-200/50 p-4 dark:border-gray-800">
+          <h3 className="font-semibold text-gray-800 dark:text-white">通用设置</h3>
+        </div>
+        <div className="flex flex-col gap-3 p-4">
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-gray-50/50 p-4 dark:bg-gray-800/50">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-red-900/30">
+                <Eye size={18} className="text-blue-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <Label className="text-sm font-medium text-gray-800 dark:text-white">开启观看记录</Label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">自动记录您的观看进度</p>
+              </div>
             </div>
             <Switch
               checked={playback.isViewingHistoryEnabled}
@@ -35,10 +50,15 @@ export default function PlaybackSettings() {
             />
           </div>
 
-          <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base">自动续播</Label>
-              <p className="text-sm text-gray-500">这一集播放完后自动播放下一集</p>
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-gray-50/50 p-4 dark:bg-gray-800/50">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-red-900/30">
+                <SkipForward size={18} className="text-green-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <Label className="text-sm font-medium text-gray-800 dark:text-white">自动续播</Label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">播放完自动播放下一集</p>
+              </div>
             </div>
             <Switch
               checked={playback.isAutoPlayEnabled}
@@ -46,12 +66,15 @@ export default function PlaybackSettings() {
             />
           </div>
 
-          <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base">跳过切片广告</Label>
-              <p className="text-sm text-gray-500">
-                尝试检测并跳过 #EXT-X-DISCONTINUITY 标记的广告片段
-              </p>
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-gray-50/50 p-4 dark:bg-gray-800/50">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-red-900/30">
+                <Filter size={18} className="text-orange-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <Label className="text-sm font-medium text-gray-800 dark:text-white">跳过切片广告</Label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">检测并跳过广告片段</p>
+              </div>
             </div>
             <Switch
               checked={adFilteringEnabled}
@@ -61,21 +84,28 @@ export default function PlaybackSettings() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white/40 p-4 backdrop-blur-md md:p-6">
-        <h2 className="mb-4 text-sm font-medium text-gray-900">显示</h2>
-        <div className="flex flex-row items-center justify-between gap-1.5">
-          <div className="space-y-0.5">
-            <Label htmlFor="order">剧集默认显示顺序</Label>
-            <p className="text-xs text-gray-500">详情页剧集列表的默认排列顺序</p>
-          </div>
-          <div className="w-[180px]">
+      <div className="overflow-hidden rounded-2xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl dark:bg-gray-900/80">
+        <div className="border-b border-gray-200/50 p-4 dark:border-gray-800">
+          <h3 className="font-semibold text-gray-800 dark:text-white">显示设置</h3>
+        </div>
+        <div className="p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-purple-100 dark:bg-red-900/30">
+                <SortAsc size={18} className="text-purple-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <Label className="text-sm font-medium text-gray-800 dark:text-white">剧集默认显示顺序</Label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">详情页剧集列表的默认排列顺序</p>
+              </div>
+            </div>
             <Select
               value={playback.defaultEpisodeOrder}
               onValueChange={(value: 'asc' | 'desc') =>
                 setPlaybackSettings({ defaultEpisodeOrder: value })
               }
             >
-              <SelectTrigger id="order">
+              <SelectTrigger className="w-full rounded-xl bg-white/60 sm:w-36 dark:bg-gray-800 dark:text-gray-100">
                 <SelectValue placeholder="选择顺序" />
               </SelectTrigger>
               <SelectContent>

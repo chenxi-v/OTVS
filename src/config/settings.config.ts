@@ -2,6 +2,8 @@ import { INITIAL_CONFIG } from './initialConfig'
 
 const envSettings = INITIAL_CONFIG?.settings
 
+export type ThemeMode = 'light' | 'dark' | 'system'
+
 export const DEFAULT_SETTINGS = {
   network: {
     defaultTimeout:
@@ -36,5 +38,8 @@ export const DEFAULT_SETTINGS = {
   },
   home: {
     defaultDataSourceId: envSettings?.home?.defaultDataSourceId ?? '',
+  },
+  theme: {
+    mode: (envSettings?.theme?.mode as ThemeMode) ?? 'system',
   },
 }

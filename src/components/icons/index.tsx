@@ -1,6 +1,4 @@
 import logoSvg from '@/assets/logo.svg'
-import recentSvg from '@/assets/recently.svg'
-import settingSvg from '@/assets/setting.svg'
 import NoItemSvg from '@/assets/noitem.svg'
 import NoResultSvg from '@/assets/noRes.svg'
 
@@ -51,32 +49,6 @@ export const SearchIcon = ({
         strokeWidth={strokeWidth}
       />
     </svg>
-  )
-}
-
-export const RecentIcon = ({ size = 36, ...props }: { size?: number }) => {
-  return (
-    <img
-      draggable={false}
-      src={recentSvg}
-      alt="Recent Icon"
-      width={size}
-      height={size}
-      {...props}
-    />
-  )
-}
-
-export const SettingIcon = ({ size = 36, ...props }: { size?: number }) => {
-  return (
-    <img
-      draggable={false}
-      src={settingSvg}
-      alt="Setting Icon"
-      width={size}
-      height={size}
-      {...props}
-    />
   )
 }
 
@@ -445,6 +417,42 @@ export const ChevronDownIcon = ({
       {...props}
     >
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+    </svg>
+  )
+}
+
+export const ChevronLeftIcon = ({
+  size = 24,
+  ...props
+}: { size?: number } & React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      width={size}
+      height={size}
+      {...props}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+    </svg>
+  )
+}
+
+export const ChevronRightIcon = ({
+  size = 24,
+  ...props
+}: { size?: number } & React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      width={size}
+      height={size}
+      {...props}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
     </svg>
   )
 }

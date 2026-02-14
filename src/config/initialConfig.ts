@@ -21,6 +21,9 @@ interface SettingsConfig {
   home?: {
     defaultDataSourceId?: string
   }
+  theme?: {
+    mode?: 'light' | 'dark' | 'system'
+  }
 }
 
 interface VideoSourceConfig {

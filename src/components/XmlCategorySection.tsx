@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Button } from '@heroui/react'
+import { Button, Input } from '@heroui/react'
 import { useNavigate } from 'react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { VideoApi, VideoItem } from '@/types'
@@ -12,6 +12,49 @@ interface XmlCategorySectionProps {
     type_name: string
   }
   api: VideoApi
+}
+
+function getOptimalColumns(count: number): string {
+  if (count === 0) return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+  
+  const findDivisors = (n: number): number[] => {
+    const divisors: number[] = []
+    for (let i = 1; i <= n; i++) {
+      if (n % i === 0) divisors.push(i)
+    }
+    return divisors
+  }
+
+  const divisors = findDivisors(count)
+  
+  const getResponsiveCols = (cols: number): string => {
+    const colsMap: Record<number, string> = {
+      2: 'grid-cols-2',
+      3: 'grid-cols-3',
+      4: 'grid-cols-4',
+      5: 'grid-cols-5',
+      6: 'grid-cols-6',
+      7: 'grid-cols-7',
+      8: 'grid-cols-8',
+    }
+    return colsMap[cols] || `grid-cols-${cols}`
+  }
+
+  const preferredCols = [4, 5, 6, 3, 2]
+  
+  for (const cols of preferredCols) {
+    if (divisors.includes(cols)) {
+      return getResponsiveCols(cols)
+    }
+  }
+
+  for (const cols of preferredCols) {
+    if (count % cols === 0 || cols % count === 0 || Math.ceil(count / cols) * cols - count <= 2) {
+      return getResponsiveCols(cols)
+    }
+  }
+
+  return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
 }
 
 export const XML_CATEGORIES = [
@@ -58,6 +101,9 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
     return savedPage ? parseInt(savedPage) : 1
   })
   const [pageCount, setPageCount] = useState(1)
+  const [jumpPage, setJumpPage] = useState('')
+
+  const gridCols = useMemo(() => getOptimalColumns(videos.length), [videos.length])
 
   const handleVideoClick = (video: VideoItem) => {
     navigate(`/detail/${video.source_code}/${video.vod_id}`)
@@ -76,6 +122,21 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
       const newPage = currentPage + 1
       setCurrentPage(newPage)
       sessionStorage.setItem(`xml_${api.id}_${category.type_id}_page`, newPage.toString())
+    }
+  }
+
+  const handleJumpPage = () => {
+    const page = parseInt(jumpPage)
+    if (!isNaN(page) && page >= 1 && page <= pageCount) {
+      setCurrentPage(page)
+      sessionStorage.setItem(`xml_${api.id}_${category.type_id}_page`, page.toString())
+      setJumpPage('')
+    }
+  }
+
+  const handleJumpPageKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleJumpPage()
     }
   }
 
@@ -193,7 +254,7 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className="grid grid-cols-4 gap-3 md:grid-cols-5 lg:grid-cols-6">
         {[1, 2, 3, 4, 5, 6].map(i => (
           <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-white/20 backdrop-blur-xl" />
         ))}
@@ -204,8 +265,8 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
   if (videos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="rounded-2xl bg-white/40 p-6 shadow-lg shadow-black/5 backdrop-blur-xl">
-          <p className="text-gray-500">暂无视频数据</p>
+        <div className="rounded-2xl bg-white/40 p-6 shadow-lg shadow-black/5 backdrop-blur-xl dark:bg-white/10">
+          <p className="text-gray-500 dark:text-gray-400">暂无视频数据</p>
         </div>
       </div>
     )
@@ -213,7 +274,7 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className={`grid gap-3 ${gridCols}`}>
         {videos.map((video, index) => (
           <motion.div
             key={`${video.source_code}_${video.vod_id}`}
@@ -222,7 +283,7 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
             transition={{ duration: 0.4, delay: index * 0.05 }}
             whileHover={{ scale: 1.03, y: -5 }}
             whileTap={{ scale: 0.98 }}
-            className="group cursor-pointer overflow-hidden rounded-2xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:shadow-xl hover:shadow-black/10"
+            className="group cursor-pointer overflow-hidden rounded-2xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:shadow-xl hover:shadow-black/10 dark:bg-white/10"
             onClick={() => handleVideoClick(video)}
           >
             <div className="relative aspect-[3/4] overflow-hidden">
@@ -267,7 +328,7 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center justify-center gap-3 pt-4"
+          className="flex flex-wrap items-center justify-center gap-2 pt-4 sm:gap-3"
         >
           <Button
             isIconOnly
@@ -275,14 +336,40 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
             variant="flat"
             isDisabled={currentPage <= 1}
             onPress={handlePrevPage}
-            className="rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+            className="rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
           >
             <ChevronLeft size={18} />
           </Button>
-          <div className="flex items-center gap-2 rounded-xl bg-white/40 px-4 py-2 shadow-lg shadow-black/5 backdrop-blur-xl">
-            <span className="text-sm font-medium text-gray-700">
+          <div className="flex items-center gap-2 rounded-xl bg-white/40 px-3 py-1.5 shadow-lg shadow-black/5 backdrop-blur-xl sm:px-4 sm:py-2 dark:bg-white/10">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
               {currentPage} / {pageCount}
             </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="number"
+              size="sm"
+              value={jumpPage}
+              onChange={e => setJumpPage(e.target.value)}
+              onKeyDown={handleJumpPageKeyDown}
+              placeholder="页码"
+              min={1}
+              max={pageCount}
+              className="w-16"
+              classNames={{
+                input: 'text-center text-sm',
+                inputWrapper: 'bg-white/40 backdrop-blur-xl rounded-xl shadow-lg shadow-black/5 dark:bg-white/10',
+              }}
+            />
+            <Button
+              size="sm"
+              variant="flat"
+              onPress={handleJumpPage}
+              isDisabled={!jumpPage || parseInt(jumpPage) < 1 || parseInt(jumpPage) > pageCount || parseInt(jumpPage) === currentPage}
+              className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-3 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50"
+            >
+              跳转
+            </Button>
           </div>
           <Button
             isIconOnly
@@ -290,7 +377,7 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
             variant="flat"
             isDisabled={currentPage >= pageCount}
             onPress={handleNextPage}
-            className="rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+            className="rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
           >
             <ChevronRight size={18} />
           </Button>

@@ -1,8 +1,8 @@
-import { OkiLogo, SearchIcon, SettingIcon, CloseIcon } from '@/components/icons'
+import { OkiLogo, SearchIcon, CloseIcon } from '@/components/icons'
 import { Button, Input } from '@heroui/react'
 import React, { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSearchHistory, useSearch, useCloudSync } from '@/hooks'
+import { useSearchHistory, useSearch, useCloudSync, useTheme } from '@/hooks'
 
 import { useSettingStore } from '@/store/settingStore'
 import { useApiStore } from '@/store/apiStore'
@@ -15,7 +15,8 @@ import XmlCategorySection, { XML_CATEGORIES } from '@/components/XmlCategorySect
 import { useNavigate } from 'react-router'
 
 import { useVersionStore } from '@/store/versionStore'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Settings, Sun, Moon, Monitor } from 'lucide-react'
+import { type ThemeMode } from '@/config/settings.config'
 const UpdateModal = React.lazy(() => import('@/components/UpdateModal'))
 
 interface Category {
@@ -26,6 +27,7 @@ interface Category {
 
 function App() {
   useCloudSync()
+  useTheme()
 
   const navigate = useNavigate()
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
@@ -36,7 +38,7 @@ function App() {
   const { search, setSearch, searchMovie } = useSearch()
 
   const { hasNewVersion, setShowUpdateModal } = useVersionStore()
-  const { system, home } = useSettingStore()
+  const { system, home, theme, setThemeSettings } = useSettingStore()
   const { videoAPIs, initializeEnvSources } = useApiStore()
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -49,9 +51,27 @@ function App() {
 
   const [categories, setCategories] = useState<Category[]>([])
   const [allCategories, setAllCategories] = useState<Category[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
-  const [selectedSubCategory, setSelectedSubCategory] = useState<Category | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(() => {
+    const saved = sessionStorage.getItem('home_selectedCategory')
+    return saved ? JSON.parse(saved) : null
+  })
+  const [selectedSubCategory, setSelectedSubCategory] = useState<Category | null>(() => {
+    const saved = sessionStorage.getItem('home_selectedSubCategory')
+    return saved ? JSON.parse(saved) : null
+  })
   const [loadingCategories, setLoadingCategories] = useState(true)
+
+  useEffect(() => {
+    if (selectedCategory) {
+      sessionStorage.setItem('home_selectedCategory', JSON.stringify(selectedCategory))
+    }
+  }, [selectedCategory])
+
+  useEffect(() => {
+    if (selectedSubCategory) {
+      sessionStorage.setItem('home_selectedSubCategory', JSON.stringify(selectedSubCategory))
+    }
+  }, [selectedSubCategory])
 
   useEffect(() => {
     if (search.length > 0) {
@@ -142,14 +162,37 @@ function App() {
           setCategories(mainCategories)
 
           if (mainCategories.length > 0) {
-            setSelectedCategory(mainCategories[0])
-            setSelectedSubCategory(null)
+            const savedCategory = sessionStorage.getItem('home_selectedCategory')
+            const savedSubCategory = sessionStorage.getItem('home_selectedSubCategory')
+            
+            if (savedCategory) {
+              const parsedCategory = JSON.parse(savedCategory)
+              const categoryExists = XML_CATEGORIES.some(cat => cat.type_id === parsedCategory.type_id)
+              if (categoryExists) {
+                setSelectedCategory(parsedCategory)
+              } else {
+                setSelectedCategory(mainCategories[0])
+              }
+            } else {
+              setSelectedCategory(mainCategories[0])
+            }
 
-            const firstCategorySubs = XML_CATEGORIES.filter(
-              cat => cat.type_pid === mainCategories[0].type_id,
-            )
-            if (firstCategorySubs.length > 0) {
-              setSelectedSubCategory(firstCategorySubs[0])
+            if (savedSubCategory) {
+              const parsedSubCategory = JSON.parse(savedSubCategory)
+              const subCategoryExists = XML_CATEGORIES.some(cat => cat.type_id === parsedSubCategory.type_id)
+              if (subCategoryExists) {
+                setSelectedSubCategory(parsedSubCategory)
+              } else {
+                setSelectedSubCategory(null)
+              }
+            } else {
+              const currentCategory = selectedCategory || mainCategories[0]
+              const firstCategorySubs = XML_CATEGORIES.filter(
+                cat => cat.type_pid === currentCategory.type_id,
+              )
+              if (firstCategorySubs.length > 0) {
+                setSelectedSubCategory(firstCategorySubs[0])
+              }
             }
           }
         } else {
@@ -168,14 +211,37 @@ function App() {
                 setCategories(mainCategories)
 
                 if (mainCategories.length > 0) {
-                  setSelectedCategory(mainCategories[0])
-                  setSelectedSubCategory(null)
+                  const savedCategory = sessionStorage.getItem('home_selectedCategory')
+                  const savedSubCategory = sessionStorage.getItem('home_selectedSubCategory')
+                  
+                  if (savedCategory) {
+                    const parsedCategory = JSON.parse(savedCategory)
+                    const categoryExists = data.class.some((cat: Category) => cat.type_id === parsedCategory.type_id)
+                    if (categoryExists) {
+                      setSelectedCategory(parsedCategory)
+                    } else {
+                      setSelectedCategory(mainCategories[0])
+                    }
+                  } else {
+                    setSelectedCategory(mainCategories[0])
+                  }
 
-                  const firstCategorySubs = data.class.filter(
-                    (cat: Category) => cat.type_pid === mainCategories[0].type_id,
-                  )
-                  if (firstCategorySubs.length > 0) {
-                    setSelectedSubCategory(firstCategorySubs[0])
+                  if (savedSubCategory) {
+                    const parsedSubCategory = JSON.parse(savedSubCategory)
+                    const subCategoryExists = data.class.some((cat: Category) => cat.type_id === parsedSubCategory.type_id)
+                    if (subCategoryExists) {
+                      setSelectedSubCategory(parsedSubCategory)
+                    } else {
+                      setSelectedSubCategory(null)
+                    }
+                  } else {
+                    const currentCategory = selectedCategory || mainCategories[0]
+                    const firstCategorySubs = data.class.filter(
+                      (cat: Category) => cat.type_pid === currentCategory.type_id,
+                    )
+                    if (firstCategorySubs.length > 0) {
+                      setSelectedSubCategory(firstCategorySubs[0])
+                    }
                   }
                 }
               } else {
@@ -192,16 +258,39 @@ function App() {
                 setCategories(mainCategories.length > 0 ? mainCategories : data.class.slice(0, 6))
 
                 if (mainCategories.length > 0) {
-                  setSelectedCategory(mainCategories[0])
-                  setSelectedSubCategory(null)
-
-                  const firstCategorySubs = allCategoriesWithPid.filter(
-                    (cat: Category) => cat.type_pid === mainCategories[0].type_id,
-                  )
-                  if (firstCategorySubs.length > 0) {
-                    setSelectedSubCategory(firstCategorySubs[0])
+                  const savedCategory = sessionStorage.getItem('home_selectedCategory')
+                  const savedSubCategory = sessionStorage.getItem('home_selectedSubCategory')
+                  
+                  if (savedCategory) {
+                    const parsedCategory = JSON.parse(savedCategory)
+                    const categoryExists = allCategoriesWithPid.some((cat: Category) => cat.type_id === parsedCategory.type_id)
+                    if (categoryExists) {
+                      setSelectedCategory(parsedCategory)
+                    } else {
+                      setSelectedCategory(mainCategories[0])
+                    }
                   } else {
-                    setSelectedSubCategory(mainCategories[0])
+                    setSelectedCategory(mainCategories[0])
+                  }
+
+                  if (savedSubCategory) {
+                    const parsedSubCategory = JSON.parse(savedSubCategory)
+                    const subCategoryExists = allCategoriesWithPid.some((cat: Category) => cat.type_id === parsedSubCategory.type_id)
+                    if (subCategoryExists) {
+                      setSelectedSubCategory(parsedSubCategory)
+                    } else {
+                      setSelectedSubCategory(null)
+                    }
+                  } else {
+                    const currentCategory = selectedCategory || mainCategories[0]
+                    const firstCategorySubs = allCategoriesWithPid.filter(
+                      (cat: Category) => cat.type_pid === currentCategory.type_id,
+                    )
+                    if (firstCategorySubs.length > 0) {
+                      setSelectedSubCategory(firstCategorySubs[0])
+                    } else {
+                      setSelectedSubCategory(currentCategory)
+                    }
                   }
                 } else if (data.class.length > 0) {
                   setSelectedCategory(data.class[0])
@@ -288,16 +377,34 @@ function App() {
         <motion.div layoutId="history-icon" className="fixed top-5 right-5 z-50 flex gap-3">
           <Button
             isIconOnly
-            className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+            className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
           >
             <RecentHistory />
           </Button>
           <Button
+            onPress={() => {
+              const modes: ThemeMode[] = ['light', 'dark', 'system']
+              const currentIndex = modes.indexOf(theme.mode)
+              const nextIndex = (currentIndex + 1) % modes.length
+              setThemeSettings({ mode: modes[nextIndex] })
+            }}
+            isIconOnly
+            className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
+          >
+            {theme.mode === 'light' ? (
+              <Sun size={22} className="text-gray-700 dark:text-gray-200" />
+            ) : theme.mode === 'dark' ? (
+              <Moon size={22} className="text-gray-700 dark:text-gray-200" />
+            ) : (
+              <Monitor size={22} className="text-gray-700 dark:text-gray-200" />
+            )}
+          </Button>
+          <Button
             onPress={() => navigate('/settings')}
             isIconOnly
-            className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+            className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
           >
-            <SettingIcon size={25} />
+            <Settings size={22} className="text-gray-700 dark:text-gray-200" />
           </Button>
         </motion.div>
 
@@ -332,7 +439,7 @@ function App() {
                 mainWrapper: 'h-full',
                 input: 'text-md',
                 inputWrapper:
-                  'h-full font-normal text-default-500 pr-2 shadow-xl shadow-black/5 backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all duration-300',
+                  'h-full font-normal text-default-500 pr-2 shadow-xl shadow-black/5 backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all duration-300 dark:bg-white/10 dark:hover:bg-white/20',
               }}
               placeholder="输入内容搜索..."
               size="lg"
@@ -383,12 +490,12 @@ function App() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 p-4 shadow-xl backdrop-blur-xl"
+                  className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 p-4 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-900/90"
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-1 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
-                      <h3 className="text-sm font-bold text-gray-900">搜索历史</h3>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white">搜索历史</h3>
                     </div>
                     <div className="relative">
                       {!isDeleteConfirmOpen ? (
@@ -396,7 +503,7 @@ function App() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => setIsDeleteConfirmOpen(true)}
-                          className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-700"
+                          className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                         >
                           <CloseIcon size={14} />
                           <span>清除</span>
@@ -407,7 +514,7 @@ function App() {
                           animate={{ opacity: 1, scale: 1 }}
                           className="flex items-center gap-2"
                         >
-                          <span className="text-xs text-gray-600">确定？</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-300">确定？</span>
                           <button
                             onClick={handleClearHistory}
                             className="text-xs font-medium text-red-500 hover:text-red-600"
@@ -416,7 +523,7 @@ function App() {
                           </button>
                           <button
                             onClick={() => setIsDeleteConfirmOpen(false)}
-                            className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                            className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                           >
                             取消
                           </button>
@@ -436,7 +543,7 @@ function App() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleHistoryClick(item.content)}
-                          className="rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-gray-200"
+                          className="rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                         >
                           {item.content}
                         </motion.button>
@@ -450,8 +557,8 @@ function App() {
 
           {loadingCategories ? (
             <div className="mt-8 space-y-4">
-              <div className="h-10 animate-pulse rounded-xl bg-white/20 backdrop-blur-xl" />
-              <div className="h-8 animate-pulse rounded-xl bg-white/20 backdrop-blur-xl" />
+              <div className="h-10 animate-pulse rounded-xl bg-white/20 backdrop-blur-xl dark:bg-white/5" />
+              <div className="h-8 animate-pulse rounded-xl bg-white/20 backdrop-blur-xl dark:bg-white/5" />
             </div>
           ) : (
             categories.length > 0 && (
@@ -471,7 +578,7 @@ function App() {
                       className={`flex-shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 ${
                         selectedCategory?.type_id === category.type_id
                           ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25'
-                          : 'bg-white/40 text-gray-700 shadow-lg shadow-black/5 backdrop-blur-xl hover:bg-white/60'
+                          : 'bg-white/40 text-gray-700 shadow-lg shadow-black/5 backdrop-blur-xl hover:bg-white/60 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20'
                       }`}
                     >
                       {category.type_name}
@@ -491,8 +598,8 @@ function App() {
                             onClick={() => setSelectedSubCategory(subCat)}
                             className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
                               selectedSubCategory?.type_id === subCat.type_id
-                                ? 'bg-gray-800 text-white shadow-md'
-                                : 'bg-white/40 text-gray-600 shadow-sm backdrop-blur-xl hover:bg-white/60'
+                                ? 'bg-gray-800 text-white shadow-md dark:bg-gray-200 dark:text-gray-800'
+                                : 'bg-white/40 text-gray-600 shadow-sm backdrop-blur-xl hover:bg-white/60 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
                             }`}
                           >
                             {subCat.type_name}
@@ -504,7 +611,7 @@ function App() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => setIsExpanded(!isExpanded)}
-                          className="flex items-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-xl transition-all hover:bg-white/60"
+                          className="flex items-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-xl transition-all hover:bg-white/60 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
                         >
                           {isExpanded ? (
                             <>
@@ -522,10 +629,10 @@ function App() {
                 )}
 
                 {targetApi && (selectedSubCategory || selectedCategory) && (
-                  <div className="overflow-hidden rounded-2xl bg-white/40 p-4 shadow-xl shadow-black/5 backdrop-blur-xl md:p-6">
+                  <div className="overflow-hidden rounded-2xl bg-white/40 p-4 shadow-xl shadow-black/5 backdrop-blur-xl md:p-6 dark:bg-white/10">
                     <div className="mb-4 flex items-center gap-3">
                       <div className="h-6 w-1 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
-                      <h2 className="text-lg font-bold text-gray-900">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                         {selectedSubCategory
                           ? `${selectedCategory?.type_name} - ${selectedSubCategory.type_name}`
                           : selectedCategory?.type_name}
