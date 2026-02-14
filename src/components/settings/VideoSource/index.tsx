@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { CircleX, CircleCheckBig, ChevronRight } from 'lucide-react'
+import { CircleX, CircleCheckBig, ChevronRight, Home } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/utils'
 import { useRef, useState, useEffect } from 'react'
@@ -19,9 +19,15 @@ import {
 } from '@/components/ui/dialog'
 import { v4 as uuidv4 } from 'uuid'
 import { URLSourceModal, TextSourceModal } from './ImportSourceModal'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function VideoSource() {
-  // 视频源
   const {
     selectAllAPIs,
     deselectAllAPIs,
@@ -30,6 +36,7 @@ export default function VideoSource() {
     getSelectedAPIs,
     importVideoAPIs,
   } = useApiStore()
+  const { home, setHomeSettings } = useSettingStore()
   // 用于显示的源列表
   const [showVideoAPIs, setShowVideoAPIs] = useState(videoAPIs)
   useEffect(() => {
@@ -158,7 +165,39 @@ export default function VideoSource() {
     <>
       <URLSourceModal open={urlSourceModalOpen} onOpenChange={setUrlSourceModalOpen} />
       <TextSourceModal open={textSourceModalOpen} onOpenChange={setTextSourceModalOpen} />
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
+        <div className="overflow-hidden rounded-2xl bg-white/40 p-4 shadow-lg shadow-black/5 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
+              <Home size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-gray-800">主页默认数据源</h3>
+              <p className="text-xs text-gray-500">设置主页分类导航默认显示的视频源</p>
+            </div>
+            <Select
+              value={home.defaultDataSourceId || 'auto'}
+              onValueChange={value => {
+                setHomeSettings({ defaultDataSourceId: value === 'auto' ? '' : value })
+              }}
+            >
+              <SelectTrigger className="w-48 rounded-xl bg-white/60 backdrop-blur-xl">
+                <SelectValue placeholder="自动选择" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">自动选择（第一个启用的源）</SelectItem>
+                {videoAPIs
+                  .filter(api => api.isEnabled)
+                  .map(api => (
+                    <SelectItem key={api.id} value={api.id}>
+                      {api.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="flex items-end justify-between gap-5 px-4 md:px-0">
           <div className="flex flex-col gap-1 md:pl-2">
             <h1 className="text-md font-semibold text-gray-700">视频源列表</h1>

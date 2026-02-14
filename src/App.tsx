@@ -1,41 +1,57 @@
 import { OkiLogo, SearchIcon, SettingIcon, CloseIcon } from '@/components/icons'
-import { Button, Input, Chip, Popover, PopoverTrigger, PopoverContent } from '@heroui/react'
-import React, { useEffect, useState } from 'react'
+import { Button, Input } from '@heroui/react'
+import React, { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchHistory, useSearch, useCloudSync } from '@/hooks'
 
 import { useSettingStore } from '@/store/settingStore'
+import { useApiStore } from '@/store/apiStore'
 
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import RecentHistory from '@/components/RecentHistory'
-import { isBrowser } from 'react-device-detect'
+import CategorySection from '@/components/CategorySection'
+import XmlCategorySection, { XML_CATEGORIES } from '@/components/XmlCategorySection'
 import { useNavigate } from 'react-router'
 
 import { useVersionStore } from '@/store/versionStore'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 const UpdateModal = React.lazy(() => import('@/components/UpdateModal'))
 
+interface Category {
+  type_id: number
+  type_pid: number
+  type_name: string
+}
+
 function App() {
-  // 云端数据同步
   useCloudSync()
 
-  // 路由控制
   const navigate = useNavigate()
-  // 删除控制
-  const [isSearchHistoryDeleteOpen, setIsSearchHistoryDeleteOpen] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [isSearchHistoryOpen, setIsSearchHistoryOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  const { searchHistory, removeSearchHistoryItem, clearSearchHistory } = useSearchHistory()
+  const { searchHistory, clearSearchHistory } = useSearchHistory()
   const { search, setSearch, searchMovie } = useSearch()
 
   const { hasNewVersion, setShowUpdateModal } = useVersionStore()
-  const { system } = useSettingStore()
+  const { system, home } = useSettingStore()
+  const { videoAPIs, initializeEnvSources } = useApiStore()
+
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const [buttonTransitionStatus, setButtonTransitionStatus] = useState({
     opacity: 0,
     filter: 'blur(5px)',
   })
   const [buttonIsDisabled, setButtonIsDisabled] = useState(true)
-  const [hoveredChipId, setHoveredChipId] = useState<string | null>(null)
+
+  const [categories, setCategories] = useState<Category[]>([])
+  const [allCategories, setAllCategories] = useState<Category[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [selectedSubCategory, setSelectedSubCategory] = useState<Category | null>(null)
+  const [loadingCategories, setLoadingCategories] = useState(true)
 
   useEffect(() => {
     if (search.length > 0) {
@@ -53,23 +69,209 @@ function App() {
     }
   }, [search])
 
-  // 检查版本更新
   useEffect(() => {
-    // 检查更新
     if (hasNewVersion() && system.isUpdateLogEnabled) {
       setShowUpdateModal(true)
     }
   }, [hasNewVersion, setShowUpdateModal, system.isUpdateLogEnabled])
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsSearchHistoryOpen(false)
+        setIsDeleteConfirmOpen(false)
+      }
+    }
+
+    if (isSearchHistoryOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isSearchHistoryOpen])
+
+  useEffect(() => {
+    const initApp = async () => {
+      await initializeEnvSources()
+      await fetchCategories()
+    }
+    initApp()
+  }, [initializeEnvSources])
+
+  useEffect(() => {
+    if (videoAPIs.length > 0) {
+      fetchCategories()
+    }
+  }, [videoAPIs, home?.defaultDataSourceId])
+
+  const getCategoryParent = (typeId: number): number => {
+    if (typeId >= 6 && typeId <= 12) return 1
+    if (typeId === 39 || typeId === 62 || typeId === 70) return 1
+    if (typeId >= 13 && typeId <= 19) return 2
+    if (typeId === 23) return 2
+    if (typeId >= 54 && typeId <= 61) return 2
+    if (typeId >= 64 && typeId <= 69) return 2
+    if (typeId >= 25 && typeId <= 28) return 3
+    if (typeId >= 29 && typeId <= 31) return 4
+    if (typeId === 44 || typeId === 45 || typeId === 63) return 4
+    if (typeId >= 47 && typeId <= 53) return 20
+    return 0
+  }
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true)
+
+      let targetApi = null
+      if (home?.defaultDataSourceId) {
+        targetApi = videoAPIs.find(api => api.id === home.defaultDataSourceId && api.isEnabled)
+      }
+
+      if (!targetApi) {
+        targetApi = videoAPIs.find(api => api.isEnabled)
+      }
+
+      if (targetApi) {
+        const isXmlApi = targetApi.url.includes('/xml')
+
+        if (isXmlApi) {
+          const mainCategories = XML_CATEGORIES.filter(cat => cat.type_pid === 0)
+          setAllCategories(XML_CATEGORIES)
+          setCategories(mainCategories)
+
+          if (mainCategories.length > 0) {
+            setSelectedCategory(mainCategories[0])
+            setSelectedSubCategory(null)
+
+            const firstCategorySubs = XML_CATEGORIES.filter(
+              cat => cat.type_pid === mainCategories[0].type_id,
+            )
+            if (firstCategorySubs.length > 0) {
+              setSelectedSubCategory(firstCategorySubs[0])
+            }
+          }
+        } else {
+          const categoryUrl = `${targetApi.url}?ac=list`
+          const response = await fetch(`/proxy?url=${encodeURIComponent(categoryUrl)}`)
+
+          if (response.ok) {
+            const data = await response.json()
+
+            if (data.code === 1 && Array.isArray(data.class)) {
+              const hasTypePid = data.class.some((cat: Category) => cat.type_pid !== undefined)
+
+              if (hasTypePid) {
+                setAllCategories(data.class)
+                const mainCategories = data.class.filter((cat: Category) => cat.type_pid === 0)
+                setCategories(mainCategories)
+
+                if (mainCategories.length > 0) {
+                  setSelectedCategory(mainCategories[0])
+                  setSelectedSubCategory(null)
+
+                  const firstCategorySubs = data.class.filter(
+                    (cat: Category) => cat.type_pid === mainCategories[0].type_id,
+                  )
+                  if (firstCategorySubs.length > 0) {
+                    setSelectedSubCategory(firstCategorySubs[0])
+                  }
+                }
+              } else {
+                const mainCategoryIds = [1, 2, 3, 4, 20]
+                const mainCategories = data.class.filter((cat: Category) =>
+                  mainCategoryIds.includes(cat.type_id),
+                )
+                const allCategoriesWithPid = data.class.map((cat: Category) => ({
+                  ...cat,
+                  type_pid: mainCategoryIds.includes(cat.type_id) ? 0 : getCategoryParent(cat.type_id),
+                }))
+
+                setAllCategories(allCategoriesWithPid)
+                setCategories(mainCategories.length > 0 ? mainCategories : data.class.slice(0, 6))
+
+                if (mainCategories.length > 0) {
+                  setSelectedCategory(mainCategories[0])
+                  setSelectedSubCategory(null)
+
+                  const firstCategorySubs = allCategoriesWithPid.filter(
+                    (cat: Category) => cat.type_pid === mainCategories[0].type_id,
+                  )
+                  if (firstCategorySubs.length > 0) {
+                    setSelectedSubCategory(firstCategorySubs[0])
+                  } else {
+                    setSelectedSubCategory(mainCategories[0])
+                  }
+                } else if (data.class.length > 0) {
+                  setSelectedCategory(data.class[0])
+                  setSelectedSubCategory(null)
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('获取分类失败:', error)
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
+
   const handleSearch = () => {
     searchMovie(search)
+    setIsSearchHistoryOpen(false)
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
       handleSearch()
     }
+    if (event.key === 'Escape') {
+      setIsSearchHistoryOpen(false)
+    }
   }
+
+  const handleHistoryClick = (content: string) => {
+    searchMovie(content)
+    setIsSearchHistoryOpen(false)
+  }
+
+  const handleClearHistory = () => {
+    clearSearchHistory()
+    setIsDeleteConfirmOpen(false)
+    setIsSearchHistoryOpen(false)
+  }
+
+  const handleCategoryClick = (category: Category) => {
+    setSelectedCategory(category)
+    setSelectedSubCategory(null)
+
+    const subs = allCategories.filter(cat => cat.type_pid === category.type_id)
+    if (subs.length > 0) {
+      setSelectedSubCategory(subs[0])
+    }
+  }
+
+  const isSearchHistoryVisible = useSettingStore.getState().search.isSearchHistoryVisible
+  const showSearchHistory = isSearchHistoryVisible && searchHistory.length > 0
+
+  const getTargetApi = () => {
+    let targetApi = null
+    if (home?.defaultDataSourceId) {
+      targetApi = videoAPIs.find(api => api.id === home.defaultDataSourceId && api.isEnabled)
+    }
+    if (!targetApi) {
+      targetApi = videoAPIs.find(api => api.isEnabled)
+    }
+    return targetApi
+  }
+
+  const targetApi = getTargetApi()
+  const subCategories = selectedCategory
+    ? allCategories.filter(cat => cat.type_pid === selectedCategory.type_id)
+    : []
 
   return (
     <>
@@ -81,26 +283,29 @@ function App() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
+        className="min-h-screen pb-20"
       >
-        <motion.div layoutId="history-icon" className="absolute top-5 right-5 z-50 flex gap-4">
-          <Button isIconOnly className="bg-white/20 shadow-lg shadow-gray-500/10 backdrop-blur-2xl">
+        <motion.div layoutId="history-icon" className="fixed top-5 right-5 z-50 flex gap-3">
+          <Button
+            isIconOnly
+            className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+          >
             <RecentHistory />
           </Button>
           <Button
-            onPress={() => {
-              navigate('/settings')
-            }}
+            onPress={() => navigate('/settings')}
             isIconOnly
-            className="bg-white/20 shadow-lg shadow-gray-500/10 backdrop-blur-2xl"
+            className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
           >
             <SettingIcon size={25} />
           </Button>
         </motion.div>
-        <div className="flex h-full min-h-screen w-full flex-col items-center justify-start md:min-h-0 md:justify-center">
+
+        <div className="container mx-auto max-w-7xl px-4 pt-20">
           <motion.div
             layoutId="app-logo"
             transition={{ duration: 0.4 }}
-            className="mt-[7rem] flex translate-x-[-1rem] items-end gap-2 text-[1.5rem] md:mt-[10rem] md:text-[2rem]"
+            className="flex translate-x-[-1rem] items-end gap-2 text-[1.5rem] md:text-[2rem]"
           >
             <motion.div layoutId="logo-icon">
               <div className="block md:hidden">
@@ -114,21 +319,20 @@ function App() {
               OUONNKI TV
             </motion.p>
           </motion.div>
+
           <motion.div
+            ref={containerRef}
             layoutId="search-container"
-            initial={{ width: 'min(30rem, 90vw)' }}
-            whileHover={{
-              scale: 1.03,
-              width: 'min(30rem, 90vw)',
-            }}
-            className="mt-[1rem] h-fit px-4 md:px-0"
+            initial={{ width: '100%' }}
+            className="relative mt-6 h-fit"
           >
             <Input
               classNames={{
                 base: 'max-w-full h-13',
                 mainWrapper: 'h-full',
                 input: 'text-md',
-                inputWrapper: 'h-full font-normal text-default-500 pr-2 shadow-lg',
+                inputWrapper:
+                  'h-full font-normal text-default-500 pr-2 shadow-xl shadow-black/5 backdrop-blur-xl bg-white/40 hover:bg-white/60 transition-all duration-300',
               }}
               placeholder="输入内容搜索..."
               size="lg"
@@ -143,6 +347,11 @@ function App() {
               value={search}
               onValueChange={setSearch}
               onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (showSearchHistory) {
+                  setIsSearchHistoryOpen(true)
+                }
+              }}
               endContent={
                 <motion.div
                   initial={{ opacity: 0, filter: 'blur(5px)' }}
@@ -155,7 +364,7 @@ function App() {
                   transition={{ duration: 0.2 }}
                 >
                   <Button
-                    className="bg-gradient-to-br from-gray-500 to-gray-950 font-bold text-white shadow-lg"
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 font-bold text-white shadow-lg shadow-blue-500/25"
                     size="md"
                     radius="full"
                     onPress={handleSearch}
@@ -166,104 +375,181 @@ function App() {
                 </motion.div>
               }
             />
-          </motion.div>
-          {useSettingStore.getState().search.isSearchHistoryVisible && searchHistory.length > 0 && (
-            <motion.div
-              initial={{ filter: isBrowser ? 'opacity(20%)' : 'opacity(100%)' }}
-              whileHover={{
-                filter: 'opacity(100%)',
-              }}
-              transition={{ duration: 0.4 }}
-              className="mt-[3rem] flex w-[88vw] flex-col items-start gap-2 px-4 md:w-[42rem] md:flex-row md:px-0"
-            >
-              <p className="text-lg font-bold">搜索历史：</p>
-              <div className="flex flex-col">
-                <div className="flex w-full flex-wrap gap-3 md:w-[34rem]">
-                  <AnimatePresence mode="popLayout">
-                    {searchHistory.map(item => (
-                      <motion.div
-                        key={item.id}
-                        layout
-                        exit={{ opacity: 0, filter: 'blur(5px)' }}
-                        onMouseEnter={() => setHoveredChipId(item.id)}
-                        onMouseLeave={() => setHoveredChipId(null)}
-                      >
-                        <Chip
-                          classNames={{
-                            base: 'cursor-pointer border-2 border-gray-400 hover:border-black hover:scale-101 transition-all duration-300',
-                            content: `transition-all duration-200 ${hoveredChipId === item.id ? 'translate-x-0' : 'translate-x-2'}`,
-                            closeButton: `transition-opacity duration-200 ${hoveredChipId === item.id ? 'opacity-100' : 'opacity-0'}`,
-                          }}
-                          variant="bordered"
-                          size="lg"
-                          onClick={() => searchMovie(item.content)}
-                          onClose={() => {
-                            if (hoveredChipId === item.id) {
-                              removeSearchHistoryItem(item.id)
-                            }
-                          }}
+
+            <AnimatePresence>
+              {isSearchHistoryOpen && showSearchHistory && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 p-4 shadow-xl backdrop-blur-xl"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-1 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
+                      <h3 className="text-sm font-bold text-gray-900">搜索历史</h3>
+                    </div>
+                    <div className="relative">
+                      {!isDeleteConfirmOpen ? (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setIsDeleteConfirmOpen(true)}
+                          className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-700"
+                        >
+                          <CloseIcon size={14} />
+                          <span>清除</span>
+                        </motion.button>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex items-center gap-2"
+                        >
+                          <span className="text-xs text-gray-600">确定？</span>
+                          <button
+                            onClick={handleClearHistory}
+                            className="text-xs font-medium text-red-500 hover:text-red-600"
+                          >
+                            确定
+                          </button>
+                          <button
+                            onClick={() => setIsDeleteConfirmOpen(false)}
+                            className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                          >
+                            取消
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex max-h-[200px] flex-wrap gap-2 overflow-y-auto">
+                    <AnimatePresence mode="popLayout">
+                      {searchHistory.map(item => (
+                        <motion.button
+                          key={item.id}
+                          layout
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleHistoryClick(item.content)}
+                          className="rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-gray-200"
                         >
                           {item.content}
-                        </Chip>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-                <div className="flex justify-end">
-                  <div className="w-fit">
-                    <Popover
-                      placement={isBrowser ? 'top-end' : 'bottom-start'}
-                      isOpen={isSearchHistoryDeleteOpen}
-                      onOpenChange={setIsSearchHistoryDeleteOpen}
-                      isKeyboardDismissDisabled
-                      crossOffset={isBrowser ? -20 : -5}
-                      classNames={{
-                        base: 'bg-transparent',
-                        content: 'bg-white/20 shadow-lg shadow-gray-500/10 backdrop-blur-xl',
-                      }}
-                    >
-                      <PopoverTrigger>
-                        <motion.div
-                          initial={{ color: '#cccccc' }}
-                          whileHover={{ color: '#999999' }}
-                          transition={{ duration: 0.4 }}
-                          className="flex justify-end gap-2 pt-[1.5rem] pr-[1.8rem] hover:cursor-pointer"
-                        >
-                          <CloseIcon size={20} />
-                          <p className="text-sm">清除全部</p>
-                        </motion.div>
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <div className="px-1 py-2">
-                          <p>确定要清除全部搜索记录吗？</p>
-                          <div className="mt-[.6rem] flex justify-end gap-[.5rem]">
-                            <Button
-                              className="h-[1.5rem] w-[3rem] min-w-[3rem] text-[.7rem] font-bold"
-                              radius="sm"
-                              variant="shadow"
-                              onPress={() => setIsSearchHistoryDeleteOpen(false)}
-                            >
-                              取消
-                            </Button>
-                            <Button
-                              className="h-[1.5rem] w-[3rem] min-w-[3rem] text-[.7rem] font-bold"
-                              variant="shadow"
-                              color="danger"
-                              radius="sm"
-                              onPress={clearSearchHistory}
-                            >
-                              确定
-                            </Button>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                        </motion.button>
+                      ))}
+                    </AnimatePresence>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {loadingCategories ? (
+            <div className="mt-8 space-y-4">
+              <div className="h-10 animate-pulse rounded-xl bg-white/20 backdrop-blur-xl" />
+              <div className="h-8 animate-pulse rounded-xl bg-white/20 backdrop-blur-xl" />
+            </div>
+          ) : (
+            categories.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-8"
+              >
+                <div className="mb-4 flex items-center gap-3 overflow-x-auto pb-2">
+                  {categories.map(category => (
+                    <motion.button
+                      key={category.type_id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleCategoryClick(category)}
+                      className={`flex-shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 ${
+                        selectedCategory?.type_id === category.type_id
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25'
+                          : 'bg-white/40 text-gray-700 shadow-lg shadow-black/5 backdrop-blur-xl hover:bg-white/60'
+                      }`}
+                    >
+                      {category.type_name}
+                    </motion.button>
+                  ))}
                 </div>
-              </div>
-            </motion.div>
+
+                {subCategories.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        {(isExpanded ? subCategories : subCategories.slice(0, 8)).map(subCat => (
+                          <motion.button
+                            key={subCat.type_id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedSubCategory(subCat)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
+                              selectedSubCategory?.type_id === subCat.type_id
+                                ? 'bg-gray-800 text-white shadow-md'
+                                : 'bg-white/40 text-gray-600 shadow-sm backdrop-blur-xl hover:bg-white/60'
+                            }`}
+                          >
+                            {subCat.type_name}
+                          </motion.button>
+                        ))}
+                      </div>
+                      {subCategories.length > 8 && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setIsExpanded(!isExpanded)}
+                          className="flex items-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-xl transition-all hover:bg-white/60"
+                        >
+                          {isExpanded ? (
+                            <>
+                              收起 <ChevronUp size={14} />
+                            </>
+                          ) : (
+                            <>
+                              更多 <ChevronDown size={14} />
+                            </>
+                          )}
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {targetApi && (selectedSubCategory || selectedCategory) && (
+                  <div className="overflow-hidden rounded-2xl bg-white/40 p-4 shadow-xl shadow-black/5 backdrop-blur-xl md:p-6">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="h-6 w-1 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
+                      <h2 className="text-lg font-bold text-gray-900">
+                        {selectedSubCategory
+                          ? `${selectedCategory?.type_name} - ${selectedSubCategory.type_name}`
+                          : selectedCategory?.type_name}
+                      </h2>
+                    </div>
+
+                    {targetApi.url.includes('/xml') ? (
+                      <XmlCategorySection
+                        category={selectedSubCategory || selectedCategory!}
+                        api={targetApi}
+                      />
+                    ) : (
+                      <CategorySection
+                        category={selectedSubCategory || selectedCategory!}
+                        api={targetApi}
+                      />
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            )
           )}
         </div>
+
         {import.meta.env.VITE_DISABLE_ANALYTICS !== 'true' && (
           <>
             <Analytics />

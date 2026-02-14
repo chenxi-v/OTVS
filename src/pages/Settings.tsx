@@ -11,6 +11,7 @@ import { cn } from '@/utils'
 import AboutProject from '@/components/settings/AboutProject'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function SettingsPage() {
   // 路由相关
@@ -20,31 +21,31 @@ export default function SettingsPage() {
     {
       id: 'video_source',
       name: '视频源管理',
-      icon: <ListVideo />,
+      icon: <ListVideo size={18} />,
       component: <VideoSource />,
     },
     {
       id: 'network_settings',
       name: '网络设置',
-      icon: <Globe />,
+      icon: <Globe size={18} />,
       component: <NetworkSettings />,
     },
     {
       id: 'search_settings',
       name: '搜索设置',
-      icon: <Search />,
+      icon: <Search size={18} />,
       component: <SearchSettings />,
     },
     {
       id: 'playback_settings',
       name: '播放设置',
-      icon: <Play />,
+      icon: <Play size={18} />,
       component: <PlaybackSettings />,
     },
     {
       id: 'about_project',
       name: '关于',
-      icon: <Info />,
+      icon: <Info size={18} />,
       component: <AboutProject />,
     },
   ]
@@ -53,47 +54,60 @@ export default function SettingsPage() {
   const currentModule = SideBarModules.find(module => module.id === activeId) || SideBarModules[0]
 
   return (
-    <div className="min-h-[90vh] pt-3 pb-20">
-      <div className="flex items-center justify-between px-1 pr-2 md:px-0">
-        <Button
-          variant="ghost"
-          className="hover:bg-white/20 hover:backdrop-blur-xl"
-          onClick={() => navigate('/')}
-        >
-          <ArrowLeft /> 返回
-        </Button>
-        <div className="flex items-center gap-0 md:hidden">
+    <div className="container mx-auto max-w-6xl min-h-[90vh] p-2 pb-20 sm:p-4 md:pt-6">
+      {/* 顶部导航栏 */}
+      <div className="mb-4 flex items-center justify-between">
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             variant="ghost"
-            className="hover:bg-white/20 hover:backdrop-blur-xl"
+            className="gap-2 rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+            onClick={() => navigate('/')}
+          >
+            <ArrowLeft size={18} />
+            <span className="font-medium">返回</span>
+          </Button>
+        </motion.div>
+        <div className="flex items-center md:hidden">
+          <Button
+            variant="ghost"
+            className="gap-2 rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
             <span className="text-sm font-medium text-gray-700">{currentModule.name}</span>
-            <Menu />
+            <Menu size={18} />
           </Button>
         </div>
       </div>
 
-      <div className="mt-2 flex flex-col gap-4 md:flex-row md:gap-8">
-        <div
-          className={cn(
-            'transition-all duration-400 ease-in md:block md:min-h-[80vh] md:w-70 md:opacity-100',
-            isSidebarOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none',
-          )}
-        >
-          <div className="px-5 md:px-0">
-            <SideBar
-              className="w-full border-r-0 border-gray-300/70 pb-2 md:w-full md:border-r md:pt-4 md:pr-8 md:pb-15 md:pl-2"
-              activeId={activeId}
-              modules={SideBarModules}
-              onSelect={id => {
-                setActiveId(id)
-                setIsSidebarOpen(false)
-              }}
-            />
+      <div className="flex flex-col gap-4 md:flex-row md:gap-6">
+        {/* 侧边栏 */}
+        <AnimatePresence>
+          <div
+            className={cn(
+              'transition-all duration-300 ease-in-out md:block md:w-56 lg:w-64',
+              isSidebarOpen
+                ? 'max-h-96 opacity-100'
+                : 'max-h-0 opacity-0 overflow-hidden md:max-h-none md:opacity-100',
+            )}
+          >
+            <div className="overflow-hidden rounded-2xl bg-white/40 p-3 shadow-xl shadow-black/5 backdrop-blur-xl md:p-4">
+              <SideBar
+                className="w-full"
+                activeId={activeId}
+                modules={SideBarModules}
+                onSelect={id => {
+                  setActiveId(id)
+                  setIsSidebarOpen(false)
+                }}
+              />
+            </div>
           </div>
+        </AnimatePresence>
+
+        {/* 内容区域 */}
+        <div className="flex-1">
+          <ModuleContent module={currentModule} />
         </div>
-        <ModuleContent module={currentModule} />
       </div>
     </div>
   )

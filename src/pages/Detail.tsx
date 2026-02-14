@@ -4,10 +4,11 @@ import { apiService } from '@/services/api.service'
 import { type DetailResponse } from '@/types'
 import { useApiStore } from '@/store/apiStore'
 import { useSettingStore } from '@/store/settingStore'
-import { Chip, Button, Spinner, Tooltip, Divider, Select, SelectItem } from '@heroui/react'
+import { Button, Spinner, Tooltip, Select, SelectItem } from '@heroui/react'
 import { useDocumentTitle } from '@/hooks'
 import { ArrowUpIcon, ArrowDownIcon } from '@/components/icons'
 import { motion } from 'framer-motion'
+import { ArrowLeft } from 'lucide-react'
 
 export default function Detail() {
   const { sourceCode, vodId } = useParams<{ sourceCode: string; vodId: string }>()
@@ -19,7 +20,6 @@ export default function Detail() {
   const [loading, setLoading] = useState(true)
   const [isReversed, setIsReversed] = useState(playback.defaultEpisodeOrder === 'desc')
   const [currentPageRange, setCurrentPageRange] = useState<string>('')
-  const [openTooltipIndex, setOpenTooltipIndex] = useState<number | null>(null)
   const [episodesPerPage, setEpisodesPerPage] = useState(100)
 
   // 计算响应式的每页集数 (基于屏幕尺寸和列数)
@@ -177,264 +177,277 @@ export default function Detail() {
     navigate(`/video/${sourceCode}/${vodId}/${actualIndex}`)
   }
 
-  // 处理长按开始
-  const handleLongPressStart = (index: number) => {
-    const timer = setTimeout(() => {
-      setOpenTooltipIndex(index)
-    }, 500)
-    return () => clearTimeout(timer)
-  }
-
-  // 处理长按结束
-  const handleLongPressEnd = () => {
-    if (openTooltipIndex !== null) {
-      setTimeout(() => {
-        setOpenTooltipIndex(null)
-      }, 300)
-    }
-  }
-
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Spinner size="lg" label="加载中..." />
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-gray-500">正在加载视频详情...</p>
+        </div>
       </div>
     )
   }
 
   if (!detail || detail.code !== 200) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-gray-500">获取视频详情失败</p>
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="rounded-2xl bg-white/40 p-8 text-center shadow-xl backdrop-blur-xl">
+          <p className="mb-4 text-gray-500">获取视频详情失败</p>
+          <Button
+            className="bg-gradient-to-r from-blue-500 to-purple-500 font-medium text-white"
+            onPress={() => navigate(-1)}
+          >
+            返回
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto overflow-x-hidden p-4 pb-15 md:pt-10">
-      {/* 视频信息卡片 */}
+    <div className="container mx-auto max-w-6xl overflow-x-hidden p-2 pb-20 sm:p-4 md:pt-8">
+      {/* 顶部导航栏 */}
+      <div className="mb-4 flex items-center justify-end">
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            variant="ghost"
+            className="gap-2 rounded-xl bg-white/40 shadow-lg shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60"
+            onPress={() => navigate(-1)}
+          >
+            <ArrowLeft size={18} />
+            <span className="font-medium">返回</span>
+          </Button>
+        </motion.div>
+      </div>
 
+      {/* 视频信息卡片 */}
       <motion.div
-        className="flex gap-5"
+        className="flex flex-col gap-4 md:flex-row md:gap-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* 封面图 */}
-        <motion.img
-          src={getCover()}
-          alt={getTitle()}
-          className="hidden w-70 rounded-lg shadow-lg md:block"
-          initial={{ opacity: 0, scale: 0.9 }}
+        {/* 封面图 - 桌面端 */}
+        <motion.div
+          className="hidden md:block"
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-        />
+        >
+          <div className="overflow-hidden rounded-2xl shadow-2xl shadow-black/20">
+            <img
+              src={getCover()}
+              alt={getTitle()}
+              className="h-[320px] w-[220px] object-cover"
+            />
+          </div>
+        </motion.div>
 
         {/* 详细信息 */}
         <motion.div
-          className="flex flex-1 flex-col gap-3 rounded-lg bg-white/40 p-4 shadow-lg/5 backdrop-blur-md"
+          className="flex-1 overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           {/* 移动端详情 */}
           <div className="md:hidden">
-            <div className="flex h-auto w-full flex-row justify-center gap-4">
+            <div className="flex gap-4 p-4">
               <motion.img
                 src={getCover()}
                 alt={getTitle()}
-                className="h-full w-1 flex-1/2 rounded-lg object-cover shadow-lg"
+                className="h-[180px] w-[120px] rounded-xl object-cover shadow-lg"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.25 }}
               />
               <motion.div
-                className="flex flex-1/2 flex-col gap-1 self-end"
+                className="flex flex-1 flex-col gap-2"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
                 {getTitle() && (
-                  <h1 className="text-[1rem] font-bold sm:text-2xl">
-                    <span className="line-clamp-2 text-gray-800">{getTitle()}</span>
+                  <h1 className="line-clamp-2 text-lg font-bold leading-tight text-gray-900">
+                    {getTitle()}
                   </h1>
                 )}
-                <div className="text-[0.7rem] sm:text-[1rem]">
-                  {getDirector() && (
-                    <div className="text-gray-500">
-                      <span className="font-semibold text-gray-700">导演：</span>
-                      <span className="line-clamp-2">{getDirector()}</span>
-                    </div>
+                <div className="flex flex-wrap gap-1">
+                  {getSourceName() && (
+                    <span className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white">
+                      {getSourceName()}
+                    </span>
                   )}
-
-                  {getActor() && (
-                    <div className="text-gray-500">
-                      <span className="font-semibold text-gray-700">演员：</span>
-                      <span className="line-clamp-2">{getActor()}</span>
-                    </div>
+                  {getYear() && (
+                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                      {getYear()}
+                    </span>
+                  )}
+                  {getType() && (
+                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                      {getType()}
+                    </span>
+                  )}
+                  {getArea() && (
+                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                      {getArea()}
+                    </span>
                   )}
                 </div>
+                <div className="mt-1 text-xs text-gray-600">
+                  {getDirector() && (
+                    <p className="line-clamp-1">
+                      <span className="font-medium text-gray-800">导演：</span>
+                      {getDirector()}
+                    </p>
+                  )}
+                  {getActor() && (
+                    <p className="line-clamp-2">
+                      <span className="font-medium text-gray-800">演员：</span>
+                      {getActor()}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+            {getContent() && (
+              <div className="border-t border-gray-200/50 p-4">
+                <div
+                  className="line-clamp-4 text-sm text-gray-600"
+                  dangerouslySetInnerHTML={{ __html: getContent() }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* 桌面端详情 */}
+          <div className="hidden md:block">
+            <div className="p-6">
+              {/* 标题和标签 */}
+              <div className="mb-4">
+                {getTitle() && (
+                  <motion.h1
+                    className="mb-3 text-2xl font-bold text-gray-900"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.3 }}
+                  >
+                    {getTitle()}
+                  </motion.h1>
+                )}
                 <motion.div
-                  className="flex-row flex-wrap text-[0.4rem]"
+                  className="flex flex-wrap gap-2"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.4 }}
                 >
-                  {[
-                    { color: 'primary' as const, value: getSourceName() },
-                    { color: 'secondary' as const, value: getYear() },
-                    { color: 'warning' as const, value: getType() },
-                    { color: 'danger' as const, value: getArea() },
-                  ].map((chip, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.2, delay: 0.4 + index * 0.05 }}
-                      style={{ display: 'inline-block' }}
-                    >
-                      <Chip size="sm" color={chip.color} variant="shadow" className="mr-1 mb-1">
-                        {chip.value}
-                      </Chip>
-                    </motion.div>
-                  ))}
+                  {getSourceName() && (
+                    <span className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-3 py-1 text-sm font-medium text-white">
+                      {getSourceName()}
+                    </span>
+                  )}
+                  {getYear() && (
+                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700">
+                      {getYear()}
+                    </span>
+                  )}
+                  {getType() && (
+                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700">
+                      {getType()}
+                    </span>
+                  )}
+                  {getArea() && (
+                    <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-medium text-gray-700">
+                      {getArea()}
+                    </span>
+                  )}
                 </motion.div>
+              </div>
+
+              {/* 详细信息 */}
+              <motion.div
+                className="space-y-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                {getDirector() && (
+                  <div className="text-gray-600">
+                    <span className="font-semibold text-gray-900">导演：</span>
+                    <span>{getDirector()}</span>
+                  </div>
+                )}
+                {getActor() && (
+                  <div className="text-gray-600">
+                    <span className="font-semibold text-gray-900">演员：</span>
+                    <span>{getActor()}</span>
+                  </div>
+                )}
               </motion.div>
-            </div>
-            <div>
+
+              {/* 简介 */}
               {getContent() && (
                 <motion.div
-                  className="mt-3 line-clamp-5 text-[0.8rem] text-gray-600 sm:text-[1rem]"
+                  className="mt-4 rounded-xl bg-gray-50/50 p-4"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.5 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
                 >
-                  <div dangerouslySetInnerHTML={{ __html: getContent() }} />
+                  <h3 className="mb-2 font-semibold text-gray-900">剧情简介</h3>
+                  <div
+                    className="text-sm leading-relaxed text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: getContent() }}
+                  />
                 </motion.div>
               )}
             </div>
           </div>
-
-          {/* 标题 */}
-          {getTitle() && (
-            <motion.h1
-              className="hidden text-3xl font-bold md:block"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              <span className="text-gray-800">{getTitle()}</span>
-            </motion.h1>
-          )}
-          <motion.div
-            className="hidden flex-wrap gap-x-1 gap-y-2 md:flex"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-          >
-            {[
-              { color: 'primary' as const, value: getSourceName(), delay: 0 },
-              { color: 'secondary' as const, value: getYear(), delay: 0.05 },
-              { color: 'warning' as const, value: getType(), delay: 0.1 },
-              { color: 'danger' as const, value: getArea(), delay: 0.15 },
-            ].map((chip, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.4 + chip.delay }}
-              >
-                <Chip color={chip.color} variant="shadow" className="mr-2">
-                  {chip.value}
-                </Chip>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* 详细信息 */}
-          <motion.div
-            className="mt-1 hidden flex-col gap-2 pl-1 md:flex"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            {getDirector() && (
-              <motion.div
-                className="text-gray-600"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
-              >
-                <span className="font-semibold text-gray-900">导演：</span>
-                <span>{getDirector()}</span>
-              </motion.div>
-            )}
-
-            {getActor() && (
-              <motion.div
-                className="text-gray-600"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.65 }}
-              >
-                <span className="font-semibold text-gray-900">演员：</span>
-                <span>{getActor()}</span>
-              </motion.div>
-            )}
-
-            {getContent() && (
-              <motion.div
-                className="mt-3 text-gray-600"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-              >
-                <div dangerouslySetInnerHTML={{ __html: getContent() }} />
-              </motion.div>
-            )}
-          </motion.div>
         </motion.div>
       </motion.div>
 
       {/* 播放列表 */}
       {detail?.videoInfo?.episodes_names && detail.videoInfo.episodes_names.length > 0 && (
         <motion.div
-          className="mt-8 flex flex-col"
+          className="mt-6 overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <motion.div
-            className="flex flex-col gap-2 p-3 pr-0 pl-1"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex flex-row items-end gap-2">
-                <motion.h2
-                  className="text-2xl font-semibold text-gray-900"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.45 }}
-                >
-                  选集
-                </motion.h2>
+          <div className="border-b border-gray-200/50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-1 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">选集</h2>
+                  <p className="text-xs text-gray-500">
+                    共 {detail.videoInfo.episodes_names.length} 集
+                  </p>
+                </div>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() => setIsReversed(!isReversed)}
+                  startContent={
+                    isReversed ? <ArrowUpIcon size={16} /> : <ArrowDownIcon size={16} />
+                  }
+                  className="bg-gray-100 font-medium text-gray-700 hover:bg-gray-200"
+                >
+                  {isReversed ? '正序' : '倒序'}
+                </Button>
                 {pageRanges.length > 1 && (
                   <Select
                     size="sm"
                     selectedKeys={[currentPageRange]}
                     onChange={e => setCurrentPageRange(e.target.value)}
-                    className="w-35"
+                    className="w-28"
                     classNames={{
-                      trigger: 'bg-white/30 backdrop-blur-md border border-gray-200',
-                      value: 'text-gray-800 font-medium',
-                      popoverContent: 'bg-white/40 backdrop-blur-2xl border border-gray-200/50',
+                      trigger: 'bg-gray-100 border-none font-medium',
+                      value: 'text-gray-700',
+                      popoverContent: 'bg-white/90 backdrop-blur-xl border border-gray-200/50',
                     }}
                     aria-label="选择集数范围"
-                    placeholder="选择集数范围"
                   >
                     {pageRanges.map(range => (
                       <SelectItem key={range.value}>{range.label}</SelectItem>
@@ -443,69 +456,34 @@ export default function Detail() {
                 )}
               </div>
             </div>
-            <Divider></Divider>
-          </motion.div>
-          {/* 列表 */}
-          <motion.div
-            className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-8"
-            key={currentPageRange}
-          >
+          </div>
+          <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
             {currentPageEpisodes.map(({ name, displayIndex }, index) => (
               <motion.div
                 key={`${name}-${displayIndex}`}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{
                   duration: 0.3,
-                  delay: index * 0.03,
+                  delay: index * 0.02,
                   ease: 'easeOut',
                 }}
               >
-                <Tooltip
-                  content={name}
-                  placement="top"
-                  delay={1000}
-                  isOpen={openTooltipIndex === displayIndex}
-                  onOpenChange={open => {
-                    if (!open) setOpenTooltipIndex(null)
-                  }}
-                >
-                  <Button
-                    size="md"
-                    color="default"
-                    variant="shadow"
-                    className="w-full border border-gray-200 bg-white/30 text-gray-800 drop-shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-black/80 hover:text-white"
-                    onPress={() => handlePlayEpisode(displayIndex)}
-                    onPressStart={() => handleLongPressStart(displayIndex)}
-                    onPressEnd={handleLongPressEnd}
+                <Tooltip content={name} placement="top" delay={1000}>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handlePlayEpisode(displayIndex)}
+                    className="relative w-full overflow-hidden rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-md"
                   >
-                    <span className="overflow-hidden text-ellipsis whitespace-nowrap">{name}</span>
-                  </Button>
+                    <span className="relative z-10 block overflow-hidden text-ellipsis whitespace-nowrap">
+                      {name}
+                    </span>
+                  </motion.button>
                 </Tooltip>
               </motion.div>
             ))}
-          </motion.div>
-          <motion.div
-            className="mt-4 flex items-end justify-between pr-4"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="sm"
-                variant="light"
-                onPress={() => setIsReversed(!isReversed)}
-                startContent={isReversed ? <ArrowUpIcon size={18} /> : <ArrowDownIcon size={18} />}
-                className="min-w-unit-16 text-sm text-gray-600"
-              >
-                {isReversed ? '正序' : '倒序'}
-              </Button>
-            </motion.div>
-            <span className="text-sm text-gray-600">
-              共 {detail.videoInfo.episodes_names.length} 集
-            </span>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </div>

@@ -14,25 +14,22 @@ export default function SideBar({
   className?: string
 }) {
   return (
-    <div className={cn(`relative flex h-full w-full flex-col gap-3`, className)}>
+    <div className={cn(`relative flex h-full w-full flex-col gap-2`, className)}>
       {modules.map(module => (
-        <div
+        <motion.button
           key={module.id}
-          className={`relative z-10 flex h-12 cursor-pointer items-center gap-2 rounded-lg p-3 transition-colors duration-300 ${
-            activeId === module.id ? 'text-white' : 'text-gray-500 hover:text-gray-700'
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`relative flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-4 transition-all duration-300 ${
+            activeId === module.id
+              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           } ${module.id === 'about_project' ? 'md:mt-auto' : ''}`}
           onClick={() => onSelect(module.id)}
         >
-          {activeId === module.id && (
-            <motion.div
-              layoutId="sidebar-active-bg"
-              className="absolute inset-0 -z-10 rounded-lg bg-zinc-600/80 shadow-xl/30 shadow-zinc-900 backdrop-blur-xl"
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            />
-          )}
           <span className="relative z-10">{module.icon}</span>
-          <h2 className="relative z-10 font-medium">{module.name}</h2>
-        </div>
+          <h2 className="relative z-10 text-sm font-medium">{module.name}</h2>
+        </motion.button>
       ))}
     </div>
   )

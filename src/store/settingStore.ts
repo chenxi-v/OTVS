@@ -26,35 +26,31 @@ interface SystemSettings {
   isUpdateLogEnabled: boolean
 }
 
+interface HomeSettings {
+  defaultDataSourceId: string
+}
+
 interface SettingState {
   network: NetworkSettings
   search: SearchSettings
   playback: PlaybackSettings
   system: SystemSettings
+  home: HomeSettings
 }
 
 interface SettingActions {
-  // Network
   setNetworkSettings: (settings: Partial<NetworkSettings>) => void
-
-  // Search
   setSearchSettings: (settings: Partial<SearchSettings>) => void
-
-  // Playback
   setPlaybackSettings: (settings: Partial<PlaybackSettings>) => void
-
-  // System
   setSystemSettings: (settings: Partial<SystemSettings>) => void
-
-  // Reset
+  setHomeSettings: (settings: Partial<HomeSettings>) => void
   resetSettings: () => void
-
-  // Set all settings (for cloud sync)
   setAllSettings: (settings: {
     network?: NetworkSettings
     search?: SearchSettings
     playback?: PlaybackSettings
     system?: SystemSettings
+    home?: HomeSettings
   }) => void
 }
 
@@ -68,6 +64,7 @@ export const useSettingStore = create<SettingStore>()(
         search: DEFAULT_SETTINGS.search,
         playback: DEFAULT_SETTINGS.playback,
         system: DEFAULT_SETTINGS.system,
+        home: DEFAULT_SETTINGS.home,
 
         setNetworkSettings: settings => {
           set(state => {
@@ -93,12 +90,19 @@ export const useSettingStore = create<SettingStore>()(
           })
         },
 
+        setHomeSettings: settings => {
+          set(state => {
+            state.home = { ...state.home, ...settings }
+          })
+        },
+
         resetSettings: () => {
           set(state => {
             state.network = DEFAULT_SETTINGS.network
             state.search = DEFAULT_SETTINGS.search
             state.playback = DEFAULT_SETTINGS.playback
             state.system = DEFAULT_SETTINGS.system
+            state.home = DEFAULT_SETTINGS.home
           })
         },
 
@@ -108,12 +112,20 @@ export const useSettingStore = create<SettingStore>()(
             if (settings.search) state.search = settings.search
             if (settings.playback) state.playback = settings.playback
             if (settings.system) state.system = settings.system
+            if (settings.home) state.home = settings.home
           })
         },
       })),
       {
         name: 'ouonnki-tv-setting-store',
-        version: 1,
+        version: 2,
+        migrate: (persistedState: unknown, version: number) => {
+          const state = persistedState as Partial<SettingState>
+          if (version < 2) {
+            state.home = DEFAULT_SETTINGS.home
+          }
+          return state
+        },
       },
     ),
     {

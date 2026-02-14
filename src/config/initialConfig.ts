@@ -18,6 +18,9 @@ interface SettingsConfig {
   system?: {
     isUpdateLogEnabled?: boolean
   }
+  home?: {
+    defaultDataSourceId?: string
+  }
 }
 
 interface VideoSourceConfig {

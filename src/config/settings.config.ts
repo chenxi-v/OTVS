@@ -34,4 +34,7 @@ export const DEFAULT_SETTINGS = {
   system: {
     isUpdateLogEnabled: envSettings?.system?.isUpdateLogEnabled ?? true,
   },
+  home: {
+    defaultDataSourceId: envSettings?.home?.defaultDataSourceId ?? '',
+  },
 }
