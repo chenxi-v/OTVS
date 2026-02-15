@@ -287,7 +287,7 @@ UPSTASH_REDIS_REST_TOKEN=your-redis-token
 # 数据分析
 VITE_DISABLE_ANALYTICS=true  # 禁用 Vercel Analytics
 
-# 访问控制（可选，用于登录保护）
+# 访问控制（可选，用于登录保护，必须设置用户名和密码才能使用云端数据库）
 VITE_ACCESS_USERNAME=your_username
 VITE_ACCESS_PASSWORD=your_secure_password
 ```
