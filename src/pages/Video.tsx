@@ -247,6 +247,8 @@ export default function Video() {
       muted: false,
       autoplay: false,
       pip: true,
+      autoSize: true,
+      autoMini: true,
       screenshot: true,
       setting: true,
       loop: false,
@@ -583,7 +585,8 @@ export default function Video() {
           <div
             id="player"
             ref={containerRef}
-            className="aspect-video w-full overflow-hidden rounded-2xl bg-black"
+            className="w-full overflow-hidden rounded-2xl bg-black"
+            style={{ aspectRatio: '16/9' }}
           />
 
           {/* 移动端当前集数显示 */}

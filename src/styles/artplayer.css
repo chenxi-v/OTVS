@@ -1,5 +1,17 @@
 /* ArtPlayer 手机端优化 */
 
+/* 播放器容器基础样式 */
+.art-video-player {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.art-video-player .art-video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
 @media (max-width: 768px) {
   /* 缩小控制栏内边距 */
   .art-video-player .art-controls {
