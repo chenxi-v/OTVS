@@ -40,6 +40,7 @@ export const DEFAULT_SETTINGS = {
   home: {
     defaultDataSourceId: envSettings?.home?.defaultDataSourceId ?? '',
     posterAspectRatio: (envSettings?.home?.posterAspectRatio as PosterAspectRatio) ?? '3/4',
+    blockedCategories: envSettings?.home?.blockedCategories ?? [],
   },
   theme: {
     mode: (envSettings?.theme?.mode as ThemeMode) ?? 'system',

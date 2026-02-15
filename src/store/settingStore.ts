@@ -29,6 +29,7 @@ interface SystemSettings {
 interface HomeSettings {
   defaultDataSourceId: string
   posterAspectRatio: PosterAspectRatio
+  blockedCategories: number[] // 被屏蔽的分类ID列表
 }
 
 interface ThemeSettings {
@@ -60,6 +61,12 @@ interface SettingActions {
     home?: HomeSettings
     theme?: ThemeSettings
   }) => void
+  // 分类屏蔽相关操作
+  addBlockedCategory: (categoryId: number) => void
+  removeBlockedCategory: (categoryId: number) => void
+  toggleBlockedCategory: (categoryId: number) => void
+  isCategoryBlocked: (categoryId: number) => boolean
+  clearBlockedCategories: () => void
 }
 
 type SettingStore = SettingState & SettingActions
@@ -132,20 +139,62 @@ export const useSettingStore = create<SettingStore>()(
             if (settings.theme) state.theme = settings.theme
           })
         },
+
+        // 分类屏蔽相关操作
+        addBlockedCategory: categoryId => {
+          set(state => {
+            if (!state.home.blockedCategories.includes(categoryId)) {
+              state.home.blockedCategories.push(categoryId)
+            }
+          })
+        },
+
+        removeBlockedCategory: categoryId => {
+          set(state => {
+            state.home.blockedCategories = state.home.blockedCategories.filter(
+              id => id !== categoryId,
+            )
+          })
+        },
+
+        toggleBlockedCategory: categoryId => {
+          set(state => {
+            const index = state.home.blockedCategories.indexOf(categoryId)
+            if (index > -1) {
+              state.home.blockedCategories.splice(index, 1)
+            } else {
+              state.home.blockedCategories.push(categoryId)
+            }
+          })
+        },
+
+        isCategoryBlocked: categoryId => {
+          const state = useSettingStore.getState()
+          return state.home.blockedCategories.includes(categoryId)
+        },
+
+        clearBlockedCategories: () => {
+          set(state => {
+            state.home.blockedCategories = []
+          })
+        },
       })),
       {
         name: 'ouonnki-tv-setting-store',
-        version: 4,
+        version: 5,
         migrate: (persistedState: unknown, version: number) => {
           const state = persistedState as Partial<SettingState>
           if (version < 2) {
-            state.home = DEFAULT_SETTINGS.home
+            state.home = { ...DEFAULT_SETTINGS.home, ...(state.home || {}) }
           }
           if (version < 3) {
             state.theme = DEFAULT_SETTINGS.theme
           }
           if (version < 4) {
-            state.home = { ...DEFAULT_SETTINGS.home, ...(state.home || {}), posterAspectRatio: DEFAULT_SETTINGS.home.posterAspectRatio }
+            state.home = { ...DEFAULT_SETTINGS.home, ...(state.home || {}), posterAspectRatio: state.home?.posterAspectRatio || DEFAULT_SETTINGS.home.posterAspectRatio }
+          }
+          if (version < 5) {
+            state.home = { ...DEFAULT_SETTINGS.home, ...(state.home || {}), blockedCategories: state.home?.blockedCategories || [] }
           }
           return state
         },

@@ -2,12 +2,13 @@ import SideBar from '@/components/settings/layouts/SideBar'
 import ModuleContent from '@/components/settings/layouts/ModuleContent'
 import { useState } from 'react'
 import { type SettingModuleList } from '@/types'
-import { ListVideo, Info, ArrowLeft, Globe, Search, Play, X, Palette } from 'lucide-react'
+import { ListVideo, Info, ArrowLeft, Globe, Search, Play, X, Palette, Shield } from 'lucide-react'
 import VideoSource from '@/components/settings/VideoSource'
 import NetworkSettings from '@/components/settings/NetworkSettings'
 import SearchSettings from '@/components/settings/SearchSettings'
 import PlaybackSettings from '@/components/settings/PlaybackSettings'
 import ThemeSettings from '@/components/settings/ThemeSettings'
+import CategorySettings from '@/components/settings/CategorySettings'
 import AboutProject from '@/components/settings/AboutProject'
 import MobileNavBar from '@/components/MobileNavBar'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,12 @@ export default function SettingsPage() {
       name: '外观设置',
       icon: <Palette size={18} />,
       component: <ThemeSettings />,
+    },
+    {
+      id: 'category_settings',
+      name: '分类屏蔽',
+      icon: <Shield size={18} />,
+      component: <CategorySettings />,
     },
     {
       id: 'about_project',

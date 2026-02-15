@@ -40,6 +40,7 @@ function App() {
 
   const { hasNewVersion, setShowUpdateModal } = useVersionStore()
   const { system, home, theme, setThemeSettings } = useSettingStore()
+  const blockedCategories = home?.blockedCategories || []
   const { videoAPIs, initializeEnvSources } = useApiStore()
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -158,9 +159,18 @@ function App() {
         const isXmlApi = targetApi.url.includes('/xml')
 
         if (isXmlApi) {
-          const mainCategories = XML_CATEGORIES.filter(cat => cat.type_pid === 0)
-          setAllCategories(XML_CATEGORIES)
+          // 过滤掉被屏蔽的分类
+          const filteredCategories = XML_CATEGORIES.filter(cat => !blockedCategories.includes(cat.type_id))
+          const mainCategories = filteredCategories.filter(cat => cat.type_pid === 0)
+          setAllCategories(filteredCategories)
           setCategories(mainCategories)
+
+          // 如果没有可用分类，清空选中状态
+          if (mainCategories.length === 0) {
+            setSelectedCategory(null)
+            setSelectedSubCategory(null)
+            return
+          }
 
           if (mainCategories.length > 0) {
             const savedCategory = sessionStorage.getItem('home_selectedCategory')
@@ -207,9 +217,18 @@ function App() {
               const hasTypePid = data.class.some((cat: Category) => cat.type_pid !== undefined)
 
               if (hasTypePid) {
-                setAllCategories(data.class)
-                const mainCategories = data.class.filter((cat: Category) => cat.type_pid === 0)
+                // 过滤掉被屏蔽的分类
+                const filteredCategories = data.class.filter((cat: Category) => !blockedCategories.includes(cat.type_id))
+                setAllCategories(filteredCategories)
+                const mainCategories = filteredCategories.filter((cat: Category) => cat.type_pid === 0)
                 setCategories(mainCategories)
+
+                // 如果没有可用分类，清空选中状态
+                if (mainCategories.length === 0) {
+                  setSelectedCategory(null)
+                  setSelectedSubCategory(null)
+                  return
+                }
 
                 if (mainCategories.length > 0) {
                   const savedCategory = sessionStorage.getItem('home_selectedCategory')
@@ -246,19 +265,28 @@ function App() {
                   }
                 }
               } else {
+                // 过滤掉被屏蔽的分类
+                const filteredClass = data.class.filter((cat: Category) => !blockedCategories.includes(cat.type_id))
                 const mainCategoryIds = [1, 2, 3, 4, 20]
-                const mainCategories = data.class.filter((cat: Category) =>
+                const mainCategories = filteredClass.filter((cat: Category) =>
                   mainCategoryIds.includes(cat.type_id),
                 )
-                const allCategoriesWithPid = data.class.map((cat: Category) => ({
+                const allCategoriesWithPid = filteredClass.map((cat: Category) => ({
                   ...cat,
                   type_pid: mainCategoryIds.includes(cat.type_id) ? 0 : getCategoryParent(cat.type_id),
                 }))
 
                 setAllCategories(allCategoriesWithPid)
-                setCategories(mainCategories.length > 0 ? mainCategories : data.class.slice(0, 6))
+                setCategories(mainCategories.length > 0 ? mainCategories : filteredClass.slice(0, 6))
 
-                if (mainCategories.length > 0) {
+                // 如果没有可用分类，清空选中状态
+                if (mainCategories.length === 0 && filteredClass.length === 0) {
+                  setSelectedCategory(null)
+                  setSelectedSubCategory(null)
+                  return
+                }
+
+                if (mainCategories.length > 0 || filteredClass.length > 0) {
                   const savedCategory = sessionStorage.getItem('home_selectedCategory')
                   const savedSubCategory = sessionStorage.getItem('home_selectedSubCategory')
                   
