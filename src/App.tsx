@@ -411,7 +411,7 @@ function App() {
           </Button>
         </div>
 
-        <div className="container mx-auto max-w-7xl px-4 pt-18 sm:pt-20">
+        <div className="container mx-auto max-w-7xl px-4 pt-20">
           <motion.div
             layoutId="app-logo"
             transition={{ duration: 0.4 }}
@@ -438,7 +438,7 @@ function App() {
           >
             <Input
               classNames={{
-                base: 'max-w-full h-13',
+                base: 'max-w-full h-13 sm:max-w-[50%]',
                 mainWrapper: 'h-full',
                 input: 'text-md',
                 inputWrapper:
@@ -571,14 +571,14 @@ function App() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="mt-8"
               >
-                <div className="mb-4 flex items-center gap-3 overflow-x-auto pb-2">
+                <div className="mb-4 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3 sm:overflow-x-auto sm:pb-2">
                   {categories.map(category => (
                     <motion.button
                       key={category.type_id}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleCategoryClick(category)}
-                      className={`flex-shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 ${
+                      className={`rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 sm:flex-shrink-0 sm:px-5 ${
                         selectedCategory?.type_id === category.type_id
                           ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25'
                           : 'bg-white/40 text-gray-700 shadow-lg shadow-black/5 backdrop-blur-xl hover:bg-white/60 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20'

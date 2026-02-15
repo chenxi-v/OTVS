@@ -15,8 +15,13 @@ interface CategorySectionProps {
   api: VideoApi
 }
 
-function getOptimalColumns(count: number): string {
-  if (count === 0) return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+function getOptimalColumns(count: number, aspectRatio?: string): string {
+  const isWide = aspectRatio === '16/9'
+  const defaultGrid = isWide 
+    ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+  
+  if (count === 0) return defaultGrid
   
   const findDivisors = (n: number): number[] => {
     const divisors: number[] = []
@@ -29,6 +34,18 @@ function getOptimalColumns(count: number): string {
   const divisors = findDivisors(count)
   
   const getResponsiveCols = (cols: number): string => {
+    if (isWide) {
+      const colsMap: Record<number, string> = {
+        2: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2',
+        3: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3',
+        4: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4',
+        5: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+        6: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+        7: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+        8: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+      }
+      return colsMap[cols] || `grid-cols-1 sm:grid-cols-2 md:grid-cols-${cols}`
+    }
     const colsMap: Record<number, string> = {
       2: 'grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2',
       3: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3',
@@ -55,7 +72,7 @@ function getOptimalColumns(count: number): string {
     }
   }
 
-  return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+  return defaultGrid
 }
 
 export default function CategorySection({ category, api }: CategorySectionProps) {
@@ -70,7 +87,7 @@ export default function CategorySection({ category, api }: CategorySectionProps)
   const [pageCount, setPageCount] = useState(1)
   const [jumpPage, setJumpPage] = useState('')
 
-  const gridCols = useMemo(() => getOptimalColumns(videos.length), [videos.length])
+  const gridCols = useMemo(() => getOptimalColumns(videos.length, home.posterAspectRatio), [videos.length, home.posterAspectRatio])
   
   const aspectRatioClass = useMemo(() => {
     return home.posterAspectRatio === '16/9' ? 'aspect-video' : 'aspect-[3/4]'
@@ -251,8 +268,11 @@ export default function CategorySection({ category, api }: CategorySectionProps)
   }
 
   if (loading) {
+    const loadingGridCols = home.posterAspectRatio === '16/9'
+      ? 'grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+      : 'grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className={`grid ${loadingGridCols}`}>
         {[1, 2, 3, 4, 5, 6].map(i => (
           <div key={i} className={`${aspectRatioClass} animate-pulse rounded-2xl bg-white/20 backdrop-blur-xl`} />
         ))}

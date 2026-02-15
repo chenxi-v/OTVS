@@ -10,11 +10,20 @@ import { useSearchStore } from '@/store/searchStore'
 import { useSettingStore } from '@/store/settingStore'
 import { TrashIcon } from '@/components/icons'
 import { Card } from '@heroui/react'
+import { Sun, Moon, Monitor } from 'lucide-react'
+import { type ThemeMode } from '@/config/settings.config'
 
 export default function Navigation() {
   const { search: searchQuery, searchMovie } = useSearch()
   const { searchHistory, removeSearchHistoryItem, clearSearchHistory } = useSearchStore()
-  const { search: searchSettings } = useSettingStore()
+  const { search: searchSettings, theme, setThemeSettings } = useSettingStore()
+
+  const cycleTheme = () => {
+    const modes: ThemeMode[] = ['light', 'dark', 'system']
+    const currentIndex = modes.indexOf(theme.mode)
+    const nextIndex = (currentIndex + 1) % modes.length
+    setThemeSettings({ mode: modes[nextIndex] })
+  }
 
   const [isFocused, setIsFocused] = useState(false)
   // Delay blur to allow item click
@@ -127,8 +136,21 @@ export default function Navigation() {
             )}
           </motion.div>
           <motion.div
+            layoutId="theme-icon"
+            onClick={cycleTheme}
+            className="flex items-center rounded-full p-2 transition-all duration-300 hover:cursor-pointer hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 active:bg-gradient-to-r active:from-blue-600 active:to-purple-600"
+          >
+            {theme.mode === 'light' ? (
+              <Sun size={22} className="text-gray-700 dark:text-gray-200" />
+            ) : theme.mode === 'dark' ? (
+              <Moon size={22} className="text-gray-700 dark:text-gray-200" />
+            ) : (
+              <Monitor size={22} className="text-gray-700 dark:text-gray-200" />
+            )}
+          </motion.div>
+          <motion.div
             layoutId="history-icon"
-            className="flex items-center rounded-full p-2 transition-all duration-300 hover:cursor-pointer hover:bg-gray-200 active:bg-gray-200"
+            className="flex items-center rounded-full p-2 transition-all duration-300 hover:cursor-pointer hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 active:bg-gradient-to-r active:from-blue-600 active:to-purple-600"
           >
             <RecentHistory />
           </motion.div>

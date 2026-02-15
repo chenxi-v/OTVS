@@ -31,16 +31,7 @@ export default function MobileNavBar({
       <div className="flex items-center gap-1">
         <span className="text-lg font-bold text-gray-900 dark:text-white">OUONNKI TV</span>
       </div>
-      <div className="flex items-center gap-1">
-        {showHistory && (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-9 w-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <RecentHistory />
-          </Button>
-        )}
+      <div className="flex items-center gap-2">
         {showTheme && (
           <Button
             size="icon"
@@ -55,6 +46,15 @@ export default function MobileNavBar({
             ) : (
               <Monitor size={20} className="text-gray-700 dark:text-gray-200" />
             )}
+          </Button>
+        )}
+        {showHistory && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-9 w-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <RecentHistory />
           </Button>
         )}
         {showSettings && (

@@ -17,6 +17,7 @@ import {
 import { NoResultIcon } from '@/components/icons'
 import { PaginationConfig } from '@/config/video.config'
 import { useDocumentTitle } from '@/hooks'
+import MobileNavBar from '@/components/MobileNavBar'
 
 export default function SearchResult() {
   const abortCtrlRef = useRef<AbortController | null>(null)
@@ -262,7 +263,9 @@ export default function SearchResult() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 pt-20 sm:pt-4">
+      <MobileNavBar />
+      
       {/* 搜索结果网格 */}
       {!loading && paginationRes[curPage - 1]?.length > 0 && (
         <div className="flex flex-col items-center gap-10">

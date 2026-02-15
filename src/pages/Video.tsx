@@ -21,8 +21,6 @@ import { ArrowUpIcon, ArrowDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@
 import MobileNavBar from '@/components/MobileNavBar'
 import _ from 'lodash'
 import { toast } from 'sonner'
-import { Sun, Moon, Monitor } from 'lucide-react'
-import { type ThemeMode } from '@/config/settings.config'
 import '@/styles/artplayer.css'
 
 // 过滤可疑的广告内容
@@ -103,7 +101,7 @@ export default function Video() {
   // 从 store 获取 API 配置
   const { videoAPIs, adFilteringEnabled } = useApiStore()
   const { addViewingHistory, viewingHistory } = useViewingHistoryStore()
-  const { playback, theme, setThemeSettings } = useSettingStore()
+  const { playback } = useSettingStore()
   
   useTheme()
 
@@ -239,57 +237,26 @@ export default function Video() {
       }
     }
 
-    // 创建新的播放器实例
+    // 创建新的播放器实例 - 简洁配置
     const art = new Artplayer({
       container: containerRef.current,
       url: detail.episodes[selectedEpisode],
+      poster: detail.videoInfo?.cover,
       volume: 0.7,
       isLive: false,
       muted: false,
       autoplay: false,
       pip: true,
-      autoSize: false,
-      autoMini: true,
       screenshot: true,
       setting: true,
       loop: false,
-      flip: true,
-      playbackRate: false,
-      aspectRatio: true,
+      playbackRate: true,
       fullscreen: true,
       fullscreenWeb: true,
-      subtitleOffset: true,
-      miniProgressBar: false,
-      mutex: true,
-      backdrop: true,
-      playsInline: true,
-      autoOrientation: true,
-      airplay: true,
       theme: '#6366f1',
       lang: 'zh-cn',
       lock: true,
       fastForward: true,
-      autoPlayback: true,
-      icons: {
-        loading: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.4 31.4" transform="rotate(0 12 12)"><animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>',
-      },
-      settings: [
-        {
-          html: '播放速度',
-          selector: [
-            { html: '0.5x', value: 0.5 },
-            { html: '0.75x', value: 0.75 },
-            { html: '正常', value: 1, default: true },
-            { html: '1.25x', value: 1.25 },
-            { html: '1.5x', value: 1.5 },
-            { html: '2x', value: 2 },
-          ],
-          onSelect: function (item) {
-            art.playbackRate = item.value as number
-            return item.html
-          },
-        },
-      ],
       moreVideoAttr: {
         crossOrigin: 'anonymous',
       },
@@ -546,29 +513,8 @@ export default function Video() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl p-2 pb-20 pt-18 sm:p-4 sm:pt-4">
+    <div className="container mx-auto max-w-7xl p-2 pb-20 pt-20 sm:p-4 sm:pt-4">
       <MobileNavBar showSettings={false} />
-
-      <div className="fixed top-5 right-5 z-50 hidden gap-3 sm:flex">
-        <Button
-          onPress={() => {
-            const modes: ThemeMode[] = ['light', 'dark', 'system']
-            const currentIndex = modes.indexOf(theme.mode)
-            const nextIndex = (currentIndex + 1) % modes.length
-            setThemeSettings({ mode: modes[nextIndex] })
-          }}
-          isIconOnly
-          className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
-        >
-          {theme.mode === 'light' ? (
-            <Sun size={22} className="text-gray-700 dark:text-gray-200" />
-          ) : theme.mode === 'dark' ? (
-            <Moon size={22} className="text-gray-700 dark:text-gray-200" />
-          ) : (
-            <Monitor size={22} className="text-gray-700 dark:text-gray-200" />
-          )}
-        </Button>
-      </div>
 
       {/* 顶部信息栏 - 手机端两行布局 */}
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -603,7 +549,7 @@ export default function Video() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* 播放器区域 */}
         <div
-          className={`relative rounded-2xl bg-black shadow-2xl shadow-black/20 transition-all duration-300 lg:col-span-3 ${
+          className={`relative rounded-2xl bg-black shadow-2xl shadow-black/20 transition-all duration-300 ${
             isEpisodePanelCollapsed ? 'lg:col-span-4' : 'lg:col-span-3'
           }`}
         >
@@ -668,15 +614,12 @@ export default function Video() {
         </div>
 
         {/* 选集面板 - 桌面端右侧 */}
-        {detail.videoInfo?.episodes_names && detail.videoInfo?.episodes_names.length > 0 && (
+        {detail.videoInfo?.episodes_names && detail.videoInfo?.episodes_names.length > 0 && !isEpisodePanelCollapsed && (
           <div
-            className={`hidden overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 lg:block dark:bg-white/10 ${
-              isEpisodePanelCollapsed
-                ? 'w-0 opacity-0'
-                : 'lg:col-span-1 opacity-100'
-            }`}
+            className="hidden overflow-hidden rounded-2xl bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 lg:block lg:col-span-1 dark:bg-white/10"
+            style={{ maxHeight: 'fit-content' }}
           >
-            <div className="flex h-full flex-col">
+            <div className="flex flex-col" style={{ maxHeight: 'min(500px, 80vh)' }}>
               {/* 选集标题 */}
               <div className="border-b border-gray-200/50 p-4 dark:border-gray-700/50">
                 <div className="flex items-center gap-3">

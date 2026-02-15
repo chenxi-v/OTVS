@@ -2,7 +2,7 @@ import SideBar from '@/components/settings/layouts/SideBar'
 import ModuleContent from '@/components/settings/layouts/ModuleContent'
 import { useState } from 'react'
 import { type SettingModuleList } from '@/types'
-import { ListVideo, Info, ArrowLeft, Globe, Search, Play, X, Palette, Sun, Moon, Monitor } from 'lucide-react'
+import { ListVideo, Info, ArrowLeft, Globe, Search, Play, X, Palette } from 'lucide-react'
 import VideoSource from '@/components/settings/VideoSource'
 import NetworkSettings from '@/components/settings/NetworkSettings'
 import SearchSettings from '@/components/settings/SearchSettings'
@@ -13,13 +13,10 @@ import MobileNavBar from '@/components/MobileNavBar'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSettingStore } from '@/store/settingStore'
-import { type ThemeMode } from '@/config/settings.config'
 import { useTheme } from '@/hooks'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
-  const { theme, setThemeSettings } = useSettingStore()
   
   useTheme()
 
@@ -72,29 +69,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl min-h-[90vh] p-2 pb-20 pt-18 sm:p-4 sm:pt-4 md:pt-6">
+    <div className="container mx-auto max-w-6xl min-h-[90vh] p-2 pb-20 pt-20 sm:p-4 sm:pt-4 md:pt-6">
       <MobileNavBar showSettings={false} />
-
-      <div className="fixed top-5 right-5 z-50 hidden gap-3 sm:flex">
-        <Button
-          onClick={() => {
-            const modes: ThemeMode[] = ['light', 'dark', 'system']
-            const currentIndex = modes.indexOf(theme.mode)
-            const nextIndex = (currentIndex + 1) % modes.length
-            setThemeSettings({ mode: modes[nextIndex] })
-          }}
-          size="icon"
-          className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-gray-900/80 dark:hover:bg-gray-800"
-        >
-          {theme.mode === 'light' ? (
-            <Sun size={22} className="text-gray-700 dark:text-red-400" />
-          ) : theme.mode === 'dark' ? (
-            <Moon size={22} className="text-gray-700 dark:text-red-400" />
-          ) : (
-            <Monitor size={22} className="text-gray-700 dark:text-red-400" />
-          )}
-        </Button>
-      </div>
 
       {/* 顶部导航栏 */}
       <div className="mb-4 flex items-center justify-end gap-3">

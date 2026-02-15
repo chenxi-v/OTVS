@@ -9,14 +9,13 @@ import { useDocumentTitle, useTheme } from '@/hooks'
 import { ArrowUpIcon, ArrowDownIcon } from '@/components/icons'
 import MobileNavBar from '@/components/MobileNavBar'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Sun, Moon, Monitor } from 'lucide-react'
-import { type ThemeMode } from '@/config/settings.config'
+import { ArrowLeft } from 'lucide-react'
 
 export default function Detail() {
   const { sourceCode, vodId } = useParams<{ sourceCode: string; vodId: string }>()
   const navigate = useNavigate()
   const { videoAPIs } = useApiStore()
-  const { playback, theme, home, setThemeSettings } = useSettingStore()
+  const { playback, home } = useSettingStore()
   
   useTheme()
 
@@ -209,29 +208,8 @@ export default function Detail() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl overflow-x-hidden p-2 pb-20 pt-18 sm:p-4 sm:pt-4 md:pt-8">
+    <div className="container mx-auto max-w-6xl overflow-x-hidden p-2 pb-20 pt-20 sm:p-4 sm:pt-4 md:pt-8">
       <MobileNavBar showSettings={false} />
-
-      <div className="fixed top-5 right-5 z-50 hidden gap-3 sm:flex">
-        <Button
-          onPress={() => {
-            const modes: ThemeMode[] = ['light', 'dark', 'system']
-            const currentIndex = modes.indexOf(theme.mode)
-            const nextIndex = (currentIndex + 1) % modes.length
-            setThemeSettings({ mode: modes[nextIndex] })
-          }}
-          isIconOnly
-          className="bg-white/40 shadow-xl shadow-black/5 backdrop-blur-xl transition-all duration-300 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/20"
-        >
-          {theme.mode === 'light' ? (
-            <Sun size={22} className="text-gray-700 dark:text-gray-200" />
-          ) : theme.mode === 'dark' ? (
-            <Moon size={22} className="text-gray-700 dark:text-gray-200" />
-          ) : (
-            <Monitor size={22} className="text-gray-700 dark:text-gray-200" />
-          )}
-        </Button>
-      </div>
 
       {/* 顶部导航栏 */}
       <div className="mb-4 flex items-center justify-end">
@@ -279,65 +257,134 @@ export default function Detail() {
         >
           {/* 移动端详情 */}
           <div className="md:hidden">
-            <div className="flex gap-4 p-4">
-              <motion.img
-                src={getCover()}
-                alt={getTitle()}
-                className={`rounded-xl object-cover shadow-lg ${home.posterAspectRatio === '16/9' ? 'aspect-video h-[90px] w-[160px]' : 'aspect-[3/4] h-[180px] w-[120px]'}`}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.25 }}
-              />
-              <motion.div
-                className="flex flex-1 flex-col gap-2"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-              >
-                {getTitle() && (
-                  <h1 className="line-clamp-2 text-lg font-bold leading-tight text-gray-900 dark:text-white">
-                    {getTitle()}
-                  </h1>
+            {home.posterAspectRatio === '16/9' ? (
+              <div className="flex flex-col gap-4 p-4">
+                <motion.img
+                  src={getCover()}
+                  alt={getTitle()}
+                  className="aspect-video w-full rounded-xl object-cover shadow-lg"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.25 }}
+                />
+                <motion.div
+                  className="flex flex-col gap-2"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                >
+                  {getTitle() && (
+                    <h1 className="line-clamp-2 text-lg font-bold leading-tight text-gray-900 dark:text-white">
+                      {getTitle()}
+                    </h1>
+                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {getSourceName() && (
+                      <span className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white">
+                        {getSourceName()}
+                      </span>
+                    )}
+                    {getYear() && (
+                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                        {getYear()}
+                      </span>
+                    )}
+                    {getType() && (
+                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                        {getType()}
+                      </span>
+                    )}
+                    {getArea() && (
+                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                        {getArea()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                    {getDirector() && (
+                      <p className="line-clamp-1">
+                        <span className="font-medium text-gray-800 dark:text-gray-200">导演：</span>
+                        {getDirector()}
+                      </p>
+                    )}
+                    {getActor() && (
+                      <p className="line-clamp-2">
+                        <span className="font-medium text-gray-800 dark:text-gray-200">演员：</span>
+                        {getActor()}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+                {getContent() && (
+                  <div className="border-t border-gray-200/50 pt-4 dark:border-gray-700/50">
+                    <div
+                      className="line-clamp-4 text-sm text-gray-600 dark:text-gray-300"
+                      dangerouslySetInnerHTML={{ __html: getContent() }}
+                    />
+                  </div>
                 )}
-                <div className="flex flex-wrap gap-1">
-                  {getSourceName() && (
-                    <span className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white">
-                      {getSourceName()}
-                    </span>
+              </div>
+            ) : (
+              <div className="flex gap-4 p-4">
+                <motion.img
+                  src={getCover()}
+                  alt={getTitle()}
+                  className="aspect-[3/4] h-[180px] w-[120px] rounded-xl object-cover shadow-lg"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.25 }}
+                />
+                <motion.div
+                  className="flex flex-1 flex-col gap-2"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                >
+                  {getTitle() && (
+                    <h1 className="line-clamp-2 text-lg font-bold leading-tight text-gray-900 dark:text-white">
+                      {getTitle()}
+                    </h1>
                   )}
-                  {getYear() && (
-                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                      {getYear()}
-                    </span>
-                  )}
-                  {getType() && (
-                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                      {getType()}
-                    </span>
-                  )}
-                  {getArea() && (
-                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                      {getArea()}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                  {getDirector() && (
-                    <p className="line-clamp-1">
-                      <span className="font-medium text-gray-800 dark:text-gray-200">导演：</span>
-                      {getDirector()}
-                    </p>
-                  )}
-                  {getActor() && (
-                    <p className="line-clamp-2">
-                      <span className="font-medium text-gray-800 dark:text-gray-200">演员：</span>
-                      {getActor()}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-            {getContent() && (
+                  <div className="flex flex-wrap gap-1">
+                    {getSourceName() && (
+                      <span className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white">
+                        {getSourceName()}
+                      </span>
+                    )}
+                    {getYear() && (
+                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                        {getYear()}
+                      </span>
+                    )}
+                    {getType() && (
+                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                        {getType()}
+                      </span>
+                    )}
+                    {getArea() && (
+                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                        {getArea()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                    {getDirector() && (
+                      <p className="line-clamp-1">
+                        <span className="font-medium text-gray-800 dark:text-gray-200">导演：</span>
+                        {getDirector()}
+                      </p>
+                    )}
+                    {getActor() && (
+                      <p className="line-clamp-2">
+                        <span className="font-medium text-gray-800 dark:text-gray-200">演员：</span>
+                        {getActor()}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+            )}
+            {getContent() && home.posterAspectRatio !== '16/9' && (
               <div className="border-t border-gray-200/50 p-4 dark:border-gray-700/50">
                 <div
                   className="line-clamp-4 text-sm text-gray-600 dark:text-gray-300"

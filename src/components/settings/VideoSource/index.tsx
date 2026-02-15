@@ -204,7 +204,11 @@ export default function VideoSource() {
                 variant={home.posterAspectRatio === '3/4' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setHomeSettings({ posterAspectRatio: '3/4' as PosterAspectRatio })}
-                className="flex-1 gap-2 rounded-xl sm:flex-none dark:bg-gray-800 dark:text-gray-100"
+                className={`flex-1 gap-2 rounded-xl sm:flex-none ${
+                  home.posterAspectRatio === '3/4'
+                    ? 'dark:bg-red-600 dark:text-white dark:hover:bg-red-700'
+                    : 'dark:bg-gray-800 dark:text-gray-100'
+                }`}
               >
                 <RectangleVertical size={16} />
                 <span>3:4 竖版</span>
@@ -213,7 +217,11 @@ export default function VideoSource() {
                 variant={home.posterAspectRatio === '16/9' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setHomeSettings({ posterAspectRatio: '16/9' as PosterAspectRatio })}
-                className="flex-1 gap-2 rounded-xl sm:flex-none dark:bg-gray-800 dark:text-gray-100"
+                className={`flex-1 gap-2 rounded-xl sm:flex-none ${
+                  home.posterAspectRatio === '16/9'
+                    ? 'dark:bg-red-600 dark:text-white dark:hover:bg-red-700'
+                    : 'dark:bg-gray-800 dark:text-gray-100'
+                }`}
               >
                 <RectangleHorizontal size={16} />
                 <span>16:9 横版</span>

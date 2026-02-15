@@ -1,265 +1,66 @@
-/* ============================================
-   ArtPlayer Custom Styles
-   播放器自定义样式
-   ============================================ */
+/* ArtPlayer 手机端优化 */
 
-/* ===== 播放器容器 ===== */
-.art-video-player {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: #000;
-}
-
-.art-video-player .art-video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/* ===== 底部控制栏容器 ===== */
-.art-video-player .art-bottom {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
-  padding: 0;
-}
-
-/* ===== 进度条样式 ===== */
-.art-video-player .art-progress {
-  position: relative;
-  width: 100%;
-  height: 4px;
-  transition: height 0.2s ease;
-  cursor: pointer;
-}
-
-.art-video-player.art-hover .art-progress,
-.art-video-player.art-control-show .art-progress {
-  height: 6px;
-}
-
-.art-video-player .art-progress .art-progress-inner {
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-}
-
-.art-video-player .art-progress .art-progress-dot {
-  width: 14px;
-  height: 14px;
-  background: #fff;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
-  transition: transform 0.2s ease;
-}
-
-.art-video-player.art-hover .art-progress .art-progress-dot {
-  transform: scale(1.2);
-}
-
-/* ===== 控制按钮区域 ===== */
-.art-video-player .art-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 12px;
-}
-
-.art-video-player .art-controls-left,
-.art-video-player .art-controls-right {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* ===== 控制按钮 ===== */
-.art-video-player .art-control {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 36px;
-  height: 36px;
-  padding: 0 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.art-video-player .art-control:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.art-video-player .art-control .art-icon {
-  font-size: 20px;
-  color: #fff;
-}
-
-/* ===== 时间显示 ===== */
-.art-video-player .art-control-time {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  padding: 0 8px;
-}
-
-/* ===== 音量控制 ===== */
-@media (hover: hover) {
-  .art-video-player .art-control-volume {
-    position: relative;
-    padding: 3px;
-  }
-
-  .art-video-player .art-control-volume::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    left: -5px;
-    right: -5px;
-    bottom: -3px;
-    z-index: -1;
-    pointer-events: auto;
-  }
-
-  .art-video-player .art-control-volume:hover .art-volume-panel,
-  .art-video-player .art-volume-panel:hover {
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-    pointer-events: auto !important;
-    transition: opacity 0.15s ease 0.1s, transform 0.15s ease 0.1s !important;
-  }
-
-  .art-video-player .art-volume-panel {
-    transition: opacity 0.15s ease 0.3s, transform 0.15s ease 0.3s !important;
-  }
-}
-
-/* ===== 设置面板 ===== */
-.art-video-player .art-settings {
-  bottom: 60px;
-  border-radius: 12px;
-  backdrop-filter: blur(16px);
-  background-color: rgba(0, 0, 0, 0.75);
-}
-
-.art-video-player .art-settings .art-setting-item {
-  padding: 10px 16px;
-  border-radius: 8px;
-  transition: background-color 0.2s ease;
-}
-
-.art-video-player .art-settings .art-setting-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* ===== 提示信息 ===== */
-.art-video-player .art-notice {
-  backdrop-filter: blur(8px);
-  background-color: rgba(0, 0, 0, 0.6);
-  border-radius: 8px;
-  padding: 8px 16px;
-}
-
-/* ===== 加载动画 ===== */
-.art-video-player .art-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.art-video-player .art-loading .art-loading-img {
-  width: 50px;
-  height: 50px;
-}
-
-/* ===== 中等屏幕适配 ===== */
 @media (max-width: 768px) {
-  .art-video-player .art-control-fullscreenWeb {
-    display: none !important;
-  }
-
-  .art-video-player .art-control-volume {
-    display: none !important;
-  }
-
+  /* 缩小控制栏内边距 */
   .art-video-player .art-controls {
-    padding: 6px 8px;
+    padding: 6px 10px !important;
   }
 
+  /* 缩小按钮尺寸 */
   .art-video-player .art-control {
-    min-width: 32px;
-    height: 32px;
-    padding: 0 6px;
-  }
-
-  .art-video-player .art-control-time {
-    font-size: 12px;
-    padding: 0 4px;
-  }
-}
-
-/* ===== 小屏幕适配 ===== */
-@media (max-width: 480px) {
-  .art-video-player .art-controls button,
-  .art-video-player .art-control {
-    min-width: 28px !important;
-    height: 28px !important;
+    min-width: 32px !important;
+    height: 32px !important;
     padding: 0 4px !important;
   }
 
-  .art-video-player .art-controls {
-    padding: 4px 6px;
+  .art-video-player .art-control .art-icon {
+    font-size: 16px !important;
   }
 
-  .art-video-player .art-control-fullscreen {
-    display: flex !important;
-    min-width: 32px !important;
+  /* 缩小时间显示 */
+  .art-video-player .art-control-time {
+    font-size: 11px !important;
+    padding: 0 6px !important;
+  }
+
+  /* 缩小进度条 */
+  .art-video-player .art-progress {
+    height: 3px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 进一步缩小 */
+  .art-video-player .art-controls {
+    padding: 4px 8px !important;
+  }
+
+  .art-video-player .art-control {
+    min-width: 28px !important;
+    height: 28px !important;
+    padding: 0 3px !important;
+  }
+
+  .art-video-player .art-control .art-icon {
+    font-size: 14px !important;
   }
 
   .art-video-player .art-control-time {
-    font-size: 11px !important;
-    padding: 0 2px !important;
+    font-size: 10px !important;
+    padding: 0 4px !important;
   }
 
-  .art-video-player .art-progress {
-    height: 2px !important;
-  }
-
-  .art-video-player.art-hover .art-progress,
-  .art-video-player.art-control-show .art-progress {
-    height: 3px !important;
-  }
-
-  .art-video-player .art-progress .art-progress-dot {
-    width: 10px;
-    height: 10px;
+  /* 小屏幕隐藏一些次要按钮 */
+  .art-video-player .art-control-screenshot,
+  .art-video-player .art-control-flip {
+    display: none !important;
   }
 }
 
-/* ===== 全屏模式优化 ===== */
-.art-video-player.art-fullscreen .art-controls,
-.art-video-player.art-fullscreen-web .art-controls {
-  padding: 10px 16px;
-}
-
-/* ===== 控制栏显示/隐藏动画 ===== */
-.art-video-player .art-bottom {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.art-video-player.art-hover .art-bottom,
-.art-video-player.art-control-show .art-bottom,
-.art-video-player.art-pause .art-bottom {
-  opacity: 1;
-}
-
-/* ===== 锁定模式 ===== */
-.art-video-player.art-lock .art-bottom {
-  opacity: 0 !important;
-  pointer-events: none;
+@media (max-width: 360px) {
+  /* 超小屏幕再隐藏一些按钮 */
+  .art-video-player .art-control-setting,
+  .art-video-player .art-control-pip {
+    display: none !important;
+  }
 }
