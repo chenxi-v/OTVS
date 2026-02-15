@@ -162,7 +162,20 @@
    ArtPlayer 底部控制栏样式优化
    ============================================ */
 
-/* 底部控制栏容器 */
+/* 播放器容器 - 确保控制栏基于容器宽度 */
+.art-video-player {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 视频元素 - 保持比例但限制在容器内 */
+.art-video-player video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* 底部控制栏容器 - 基于播放器容器宽度 */
 .art-video-player .art-bottom {
   position: absolute;
   left: 0;
@@ -173,16 +186,20 @@
   background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.4) 60%, transparent);
   padding: 20px 12px 12px;
   transition: opacity 0.3s ease, transform 0.3s ease;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-/* 进度条区域 */
+/* 进度条区域 - 基于容器宽度 */
 .art-video-player .art-progress {
   position: relative;
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
   height: 6px;
   transition: height 0.2s ease;
   cursor: pointer;
   margin-bottom: 8px;
+  box-sizing: border-box !important;
 }
 
 /* 鼠标悬停时进度条变高 */
@@ -218,13 +235,15 @@
   box-shadow: 0 0 15px rgba(34, 197, 94, 0.8) !important;
 }
 
-/* 控制按钮区域 */
+/* 控制按钮区域 - 基于容器宽度 */
 .art-video-player .art-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
   padding: 4px 0;
+  box-sizing: border-box !important;
 }
 
 /* 左右控制区域 */

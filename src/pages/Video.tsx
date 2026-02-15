@@ -564,7 +564,7 @@ export default function Video() {
           <div
             id="player"
             ref={containerRef}
-            className="flex aspect-video w-full items-center rounded-lg bg-black"
+            className="relative flex aspect-video w-full items-center overflow-hidden rounded-lg bg-black"
           />
         </CardBody>
       </Card>
