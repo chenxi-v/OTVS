@@ -73,4 +73,5 @@ export interface VideoApi {
   retry?: number
   isEnabled: boolean
   updatedAt: Date
+  proxyUrl?: string // Cloudflare Worker 代理地址，为空则使用本地代理
 }

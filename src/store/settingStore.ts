@@ -26,6 +26,11 @@ interface SystemSettings {
   isUpdateLogEnabled: boolean
 }
 
+interface ProxySettings {
+  enabled: boolean
+  proxyUrl: string
+}
+
 interface HomeSettings {
   defaultDataSourceId: string
   posterAspectRatio: PosterAspectRatio
@@ -43,6 +48,7 @@ interface SettingState {
   system: SystemSettings
   home: HomeSettings
   theme: ThemeSettings
+  proxy: ProxySettings
 }
 
 interface SettingActions {
@@ -52,6 +58,7 @@ interface SettingActions {
   setSystemSettings: (settings: Partial<SystemSettings>) => void
   setHomeSettings: (settings: Partial<HomeSettings>) => void
   setThemeSettings: (settings: Partial<ThemeSettings>) => void
+  setProxySettings: (settings: Partial<ProxySettings>) => void
   resetSettings: () => void
   setAllSettings: (settings: {
     network?: NetworkSettings
@@ -60,6 +67,7 @@ interface SettingActions {
     system?: SystemSettings
     home?: HomeSettings
     theme?: ThemeSettings
+    proxy?: ProxySettings
   }) => void
   // 分类屏蔽相关操作
   addBlockedCategory: (categoryId: number) => void
@@ -80,6 +88,7 @@ export const useSettingStore = create<SettingStore>()(
         system: DEFAULT_SETTINGS.system,
         home: DEFAULT_SETTINGS.home,
         theme: DEFAULT_SETTINGS.theme,
+        proxy: DEFAULT_SETTINGS.proxy,
 
         setNetworkSettings: settings => {
           set(state => {
@@ -117,6 +126,12 @@ export const useSettingStore = create<SettingStore>()(
           })
         },
 
+        setProxySettings: settings => {
+          set(state => {
+            state.proxy = { ...state.proxy, ...settings }
+          })
+        },
+
         resetSettings: () => {
           set(state => {
             state.network = DEFAULT_SETTINGS.network
@@ -125,6 +140,7 @@ export const useSettingStore = create<SettingStore>()(
             state.system = DEFAULT_SETTINGS.system
             state.home = DEFAULT_SETTINGS.home
             state.theme = DEFAULT_SETTINGS.theme
+            state.proxy = DEFAULT_SETTINGS.proxy
           })
         },
 
@@ -136,6 +152,7 @@ export const useSettingStore = create<SettingStore>()(
             if (settings.system) state.system = settings.system
             if (settings.home) state.home = settings.home
             if (settings.theme) state.theme = settings.theme
+            if (settings.proxy) state.proxy = settings.proxy
           })
         },
 

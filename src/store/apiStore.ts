@@ -5,6 +5,8 @@ import type { VideoApi } from '@/types'
 import { getInitialVideoSources } from '@/config/api.config'
 import { v4 as uuidv4 } from 'uuid'
 import { useSettingStore } from './settingStore'
+import { dbService } from '@/services/db.service'
+import { toast } from 'sonner'
 
 interface ApiState {
   // 自定义 API 列表
@@ -17,9 +19,9 @@ interface ApiActions {
   // 设置 API 启用状态
   setApiEnabled: (apiId: string, enabled: boolean) => void
   // 添加视频 API
-  addAndUpdateVideoAPI: (api: VideoApi) => void
+  addAndUpdateVideoAPI: (api: VideoApi) => Promise<void>
   // 删除视频 API
-  removeVideoAPI: (apiId: string) => void
+  removeVideoAPI: (apiId: string) => Promise<void>
   // 设置广告过滤
   setAdFilteringEnabled: (enabled: boolean) => void
   // 全选 API
@@ -29,7 +31,7 @@ interface ApiActions {
   // 初始化环境变量中的视频源
   initializeEnvSources: () => void
   // 批量导入视频源
-  importVideoAPIs: (apis: VideoApi[]) => void
+  importVideoAPIs: (apis: VideoApi[]) => Promise<void>
   // 获取选中的视频源
   getSelectedAPIs: () => VideoApi[]
   // 重置视频源
@@ -57,7 +59,7 @@ export const useApiStore = create<ApiStore>()(
           })
         },
 
-        addAndUpdateVideoAPI: (api: VideoApi) => {
+        addAndUpdateVideoAPI: async (api: VideoApi) => {
           set(state => {
             const index = state.videoAPIs.findIndex(a => a.id === api.id)
             if (index !== -1) {
@@ -66,12 +68,30 @@ export const useApiStore = create<ApiStore>()(
               state.videoAPIs.push({ ...api, updatedAt: new Date() })
             }
           })
+          // 同步到云端
+          if (dbService.isCloudSyncEnabled()) {
+            try {
+              await dbService.addVideoApi({ ...api, updatedAt: new Date() })
+            } catch (error) {
+              console.error('Failed to sync video API to cloud:', error)
+              toast.error('同步到云端失败')
+            }
+          }
         },
 
-        removeVideoAPI: (apiId: string) => {
+        removeVideoAPI: async (apiId: string) => {
           set(state => {
             state.videoAPIs = state.videoAPIs.filter(api => api.id !== apiId)
           })
+          // 同步到云端
+          if (dbService.isCloudSyncEnabled()) {
+            try {
+              await dbService.removeVideoApi(apiId)
+            } catch (error) {
+              console.error('Failed to remove video API from cloud:', error)
+              toast.error('从云端删除失败')
+            }
+          }
         },
 
         setAdFilteringEnabled: (enabled: boolean) => {
@@ -115,7 +135,8 @@ export const useApiStore = create<ApiStore>()(
           })
         },
 
-        importVideoAPIs: (apis: VideoApi[]) => {
+        importVideoAPIs: async (apis: VideoApi[]) => {
+          const newApis: VideoApi[] = []
           set(state => {
             apis.forEach(api => {
               // 检查是否已存在相同的源（基于name和url）
@@ -125,7 +146,7 @@ export const useApiStore = create<ApiStore>()(
                   (existingApi.name === api.name && existingApi.url === api.url),
               )
               if (!exists) {
-                state.videoAPIs.push({
+                const newApi: VideoApi = {
                   id: api.id || uuidv4(),
                   name: api.name,
                   url: api.url,
@@ -134,10 +155,23 @@ export const useApiStore = create<ApiStore>()(
                   retry: api.retry || useSettingStore.getState().network.defaultRetry || 3,
                   isEnabled: api.isEnabled ?? true,
                   updatedAt: api.updatedAt || new Date(),
-                })
+                }
+                state.videoAPIs.push(newApi)
+                newApis.push(newApi)
               }
             })
           })
+          // 同步到云端
+          if (dbService.isCloudSyncEnabled() && newApis.length > 0) {
+            try {
+              for (const api of newApis) {
+                await dbService.addVideoApi(api)
+              }
+            } catch (error) {
+              console.error('Failed to sync imported video APIs to cloud:', error)
+              toast.error('批量同步到云端失败')
+            }
+          }
         },
 
         getSelectedAPIs: () => {

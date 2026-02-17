@@ -17,6 +17,7 @@ import { useState } from 'react'
 import { useApiStore } from '@/store/apiStore'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { parseVideoSourceConfig, isTVBoxFormat } from '@/utils/tvboxParser'
 
 export function URLSourceModal({
   open,
@@ -49,18 +50,22 @@ export function URLSourceModal({
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      const sources = await response.json()
-      if (Array.isArray(sources)) {
-        importVideoAPIs(sources)
+      const rawData = await response.json()
+
+      // 使用通用解析器处理多种格式
+      const sources = parseVideoSourceConfig(rawData)
+
+      if (sources.length > 0) {
+        await importVideoAPIs(sources)
         toast.success(`成功导入 ${sources.length} 个视频源`)
         onOpenChange(false)
         reset()
       } else {
-        toast.error('导入失败：文件格式错误，应为数组格式')
+        toast.error('导入失败：未找到有效的视频源')
       }
     } catch (error) {
       console.error('Import error:', error)
-      toast.error('导入失败：请求错误或解析失败')
+      toast.error(`导入失败：${error instanceof Error ? error.message : '请求错误或解析失败'}`)
     } finally {
       setIsLoading(false)
     }
@@ -74,7 +79,7 @@ export function URLSourceModal({
       >
         <DialogHeader>
           <DialogTitle>从 URL 导入视频源</DialogTitle>
-          <DialogDescription>请输入有效的 URL，即 JSON 文件的直链 URL</DialogDescription>
+          <DialogDescription>支持标准格式和 TVBox 格式（js.json）的 JSON 文件</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 pb-6">
@@ -121,13 +126,14 @@ export function TextSourceModal({
       val => {
         try {
           const parsed = JSON.parse(val)
-          return Array.isArray(parsed)
+          // 支持 TVBox 格式或数组格式
+          return isTVBoxFormat(parsed) || Array.isArray(parsed)
         } catch {
           return false
         }
       },
       {
-        message: '请输入有效的 JSON 数组格式',
+        message: '请输入有效的 JSON 格式（支持 TVBox 格式或标准数组格式）',
       },
     ),
   })
@@ -143,16 +149,24 @@ export function TextSourceModal({
     resolver: zodResolver(textSchema),
   })
 
-  const onSubmit = (data: TextSchema) => {
+  const onSubmit = async (data: TextSchema) => {
     try {
-      const sources = JSON.parse(data.content)
-      importVideoAPIs(sources)
-      toast.success(`成功导入 ${sources.length} 个视频源`)
-      onOpenChange(false)
-      reset()
+      const rawData = JSON.parse(data.content)
+
+      // 使用通用解析器处理多种格式
+      const sources = parseVideoSourceConfig(rawData)
+
+      if (sources.length > 0) {
+        await importVideoAPIs(sources)
+        toast.success(`成功导入 ${sources.length} 个视频源`)
+        onOpenChange(false)
+        reset()
+      } else {
+        toast.error('导入失败：未找到有效的视频源')
+      }
     } catch (error) {
       console.error('Import error:', error)
-      toast.error('导入失败：JSON 解析错误')
+      toast.error(`导入失败：${error instanceof Error ? error.message : '解析错误'}`)
     }
   }
 
@@ -164,7 +178,7 @@ export function TextSourceModal({
       >
         <DialogHeader>
           <DialogTitle>从文本导入视频源</DialogTitle>
-          <DialogDescription>请粘贴 JSON 格式的视频源配置数组</DialogDescription>
+          <DialogDescription>支持标准格式和 TVBox 格式（js.json）的 JSON 配置</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 pb-6">

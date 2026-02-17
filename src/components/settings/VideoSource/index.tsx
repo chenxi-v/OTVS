@@ -10,6 +10,7 @@ import { useSettingStore } from '@/store/settingStore'
 import dayjs from 'dayjs'
 import ActionDropdown from '@/components/common/ActionDropdown'
 import VideoSourceForm from './VideoSourceForm'
+import { parseVideoSourceConfig } from '@/utils/tvboxParser'
 import {
   Dialog,
   DialogContent,
@@ -83,24 +84,28 @@ export default function VideoSource() {
     fileInputRef.current?.click()
   }
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     const reader = new FileReader()
-    reader.onload = e => {
+    reader.onload = async e => {
       try {
         const content = e.target?.result as string
-        const sources = JSON.parse(content)
-        if (Array.isArray(sources)) {
-          importVideoAPIs(sources)
+        const rawData = JSON.parse(content)
+
+        // 使用通用解析器处理多种格式（支持 TVBox 格式）
+        const sources = parseVideoSourceConfig(rawData)
+
+        if (sources.length > 0) {
+          await importVideoAPIs(sources)
           toast.success(`成功导入 ${sources.length} 个视频源`)
         } else {
-          toast.error('导入失败：文件格式错误，应为数组格式')
+          toast.error('导入失败：未找到有效的视频源')
         }
       } catch (error) {
         console.error('Import error:', error)
-        toast.error('导入失败：JSON 解析错误')
+        toast.error(`导入失败：${error instanceof Error ? error.message : 'JSON 解析错误'}`)
       }
       if (fileInputRef.current) {
         fileInputRef.current.value = ''

@@ -26,6 +26,10 @@ interface SettingsConfig {
   theme?: {
     mode?: 'light' | 'dark' | 'system'
   }
+  proxy?: {
+    enabled?: boolean
+    proxyUrl?: string
+  }
 }
 
 interface VideoSourceConfig {

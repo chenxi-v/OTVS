@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { Info, ChevronsUpDown } from 'lucide-react'
+import { Info, ChevronsUpDown, Cloud, Globe, CheckCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -158,6 +158,7 @@ export default function VideoSourceForm({ sourceInfo }: { sourceInfo: VideoApi }
     retry: z.coerce.number().min(0, '重试次数不能为空且需要大于等于0').optional(),
     updatedAt: z.coerce.date().default(() => new Date()),
     isEnabled: z.boolean().default(true),
+    proxyUrl: z.string().optional(),
   })
   // 类型推导
   type FormSchema = z.infer<typeof formSchema>
@@ -168,6 +169,7 @@ export default function VideoSourceForm({ sourceInfo }: { sourceInfo: VideoApi }
     setValue,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormSchema>({
     resolver: zodResolver(formSchema) as Resolver<FormSchema>,
@@ -180,15 +182,19 @@ export default function VideoSourceForm({ sourceInfo }: { sourceInfo: VideoApi }
       retry: sourceInfo.retry,
       updatedAt: sourceInfo.updatedAt,
       isEnabled: sourceInfo.isEnabled,
+      proxyUrl: sourceInfo.proxyUrl,
     },
   })
+
+  // 监听 proxyUrl 变化
+  const proxyUrl = watch('proxyUrl')
 
   // 监听 props 变化，更新表单数据
   useEffect(() => {
     reset(sourceInfo)
   }, [sourceInfo, reset])
   // 表单提交
-  const onSubmit = (data: FormSchema) => {
+  const onSubmit = async (data: FormSchema) => {
     // 如果修改了 ID，且新 ID 已存在
     if (data.id !== sourceInfo.id) {
       if (videoAPIs.some(api => api.id === data.id)) {
@@ -196,10 +202,10 @@ export default function VideoSourceForm({ sourceInfo }: { sourceInfo: VideoApi }
         return
       }
       // 如果修改了 ID，先删除旧的
-      removeVideoAPI(sourceInfo.id)
+      await removeVideoAPI(sourceInfo.id)
     }
 
-    addAndUpdateVideoAPI(data)
+    await addAndUpdateVideoAPI(data)
     toast.success('保存成功')
   }
 
@@ -212,8 +218,8 @@ export default function VideoSourceForm({ sourceInfo }: { sourceInfo: VideoApi }
   // 高级设置
   const [isOpen, setIsOpen] = useState(false)
   // 删除视频源
-  const handleDelete = (id: string) => {
-    removeVideoAPI(id)
+  const handleDelete = async (id: string) => {
+    await removeVideoAPI(id)
     toast.success('删除成功')
   }
   return (
@@ -303,6 +309,41 @@ export default function VideoSourceForm({ sourceInfo }: { sourceInfo: VideoApi }
                   errors={errors}
                   type="number"
                 />
+                {/* Cloudflare Worker 代理配置 */}
+                <Field className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Cloud size={18} className="text-blue-500" />
+                    <FieldLabel className="text-base font-semibold">Cloudflare Worker 代理</FieldLabel>
+                  </div>
+                  <FieldDescription className="mb-3">
+                    为当前视频源配置 Cloudflare Worker 代理加速，留空则使用本地代理
+                  </FieldDescription>
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="例如：https://corsapi.smone.workers.dev"
+                      {...register('proxyUrl')}
+                      className={proxyUrl ? 'border-blue-500' : ''}
+                    />
+                    {proxyUrl && (
+                      <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                        <CheckCircle size={14} />
+                        <span>已启用 Worker 代理加速</span>
+                      </div>
+                    )}
+                    {!proxyUrl && (
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <Globe size={14} />
+                        <span>使用本地代理</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      格式：https://your-worker.workers.dev
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      推荐：https://corsapi.smone.workers.dev（默认）
+                    </p>
+                  </div>
+                </Field>
               </FieldGroup>
             </CollapsibleContent>
           </Collapsible>

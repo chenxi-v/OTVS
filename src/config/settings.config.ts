@@ -45,4 +45,8 @@ export const DEFAULT_SETTINGS = {
   theme: {
     mode: (envSettings?.theme?.mode as ThemeMode) ?? 'system',
   },
+  proxy: {
+    enabled: envSettings?.proxy?.enabled ?? false,
+    proxyUrl: envSettings?.proxy?.proxyUrl ?? 'https://corsapi.smone.workers.dev',
+  },
 }

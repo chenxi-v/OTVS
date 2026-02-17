@@ -21,6 +21,17 @@ export const API_CONFIG = {
 // 其他配置
 // 统一使用内置代理
 export const PROXY_URL = '/proxy?url='
+
+// 获取代理 URL（根据 Cloudflare Worker 代理设置）
+export const getProxyUrl = (targetUrl: string, workerProxyUrl?: string): string => {
+  if (workerProxyUrl) {
+    // 使用 Cloudflare Worker 代理 (CORSAPI 格式: https://worker.workers.dev/?url=目标URL)
+    const baseUrl = workerProxyUrl.replace(/\/$/, '')
+    return `${baseUrl}/?url=${encodeURIComponent(targetUrl)}`
+  }
+  // 使用本地代理
+  return `${PROXY_URL}${encodeURIComponent(targetUrl)}`
+}
 export const M3U8_PATTERN = /\$https?:\/\/[^"'\s]+?\.m3u8/g
 
 import type { VideoApi } from '@/types/video'

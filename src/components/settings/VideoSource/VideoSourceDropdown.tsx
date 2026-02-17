@@ -48,13 +48,13 @@ export default function VideoSourceDropdown({
                   className="hover:cursor-pointer"
                   onClick={addVideoSourceFromJSONFile}
                 >
-                  从文件导入
+                  从文件导入 (支持 TVBox)
                 </DropdownMenuItem>
                 <DropdownMenuItem className="hover:cursor-pointer" onClick={addVideoSourceFromURL}>
-                  从URL导入
+                  从URL导入 (支持 TVBox)
                 </DropdownMenuItem>
                 <DropdownMenuItem className="hover:cursor-pointer" onClick={addVideoSourceFromText}>
-                  从文本导入
+                  从文本导入 (支持 TVBox)
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

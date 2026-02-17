@@ -1,7 +1,24 @@
-import { API_CONFIG, PROXY_URL, M3U8_PATTERN } from '@/config/api.config'
+import { API_CONFIG, M3U8_PATTERN, getProxyUrl } from '@/config/api.config'
+import { useSettingStore } from '@/store/settingStore'
 import type { SearchResponse, DetailResponse, VideoItem, VideoApi } from '@/types'
 
 class ApiService {
+  // 获取代理 URL（优先级：视频源单独配置 > 全局配置 > 本地代理）
+  private getProxyUrl(targetUrl: string, api?: VideoApi): string {
+    // 1. 优先使用视频源单独配置的 proxyUrl
+    if (api?.proxyUrl) {
+      return getProxyUrl(targetUrl, api.proxyUrl)
+    }
+
+    // 2. 使用全局代理配置
+    const { proxy } = useSettingStore.getState()
+    if (proxy.enabled && proxy.proxyUrl) {
+      return getProxyUrl(targetUrl, proxy.proxyUrl)
+    }
+
+    // 3. 使用本地代理
+    return getProxyUrl(targetUrl)
+  }
   private async fetchWithTimeout(
     url: string,
     options: RequestInit = {},
@@ -69,7 +86,7 @@ class ApiService {
       const apiUrl = this.buildApiUrl(api.url, API_CONFIG.search.path, encodeURIComponent(query))
 
       const response = await this.fetchWithTimeout(
-        PROXY_URL + encodeURIComponent(apiUrl),
+        this.getProxyUrl(apiUrl, api),
         {
           headers: API_CONFIG.search.headers,
         },
@@ -128,7 +145,7 @@ class ApiService {
       const baseUrl = api.detailUrl || api.url
       const detailUrl = this.buildApiUrl(baseUrl, API_CONFIG.detail.path, id)
 
-      const response = await this.fetchWithTimeout(PROXY_URL + encodeURIComponent(detailUrl), {
+      const response = await this.fetchWithTimeout(this.getProxyUrl(detailUrl, api), {
         headers: API_CONFIG.detail.headers,
       })
 

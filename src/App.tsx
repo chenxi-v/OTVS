@@ -6,6 +6,7 @@ import { useSearchHistory, useSearch, useCloudSync, useTheme } from '@/hooks'
 
 import { useSettingStore } from '@/store/settingStore'
 import { useApiStore } from '@/store/apiStore'
+import { getProxyUrl } from '@/config/api.config'
 
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -39,9 +40,29 @@ function App() {
   const { search, setSearch, searchMovie } = useSearch()
 
   const { hasNewVersion, setShowUpdateModal } = useVersionStore()
-  const { system, home, theme, setThemeSettings } = useSettingStore()
+  const { system, home, theme, proxy, setThemeSettings } = useSettingStore()
   const blockedCategories = home?.blockedCategories || []
   const { videoAPIs, initializeEnvSources } = useApiStore()
+
+  // 获取代理 URL（优先级：视频源单独配置 > 全局配置 > 本地代理）
+  const getProxyUrlWithSettings = (targetUrl: string, apiUrl?: string): string => {
+    // 根据 apiUrl 找到对应的视频源
+    if (apiUrl) {
+      const api = videoAPIs.find(a => a.url === apiUrl || a.detailUrl === apiUrl)
+      // 1. 优先使用视频源单独配置的 proxyUrl
+      if (api?.proxyUrl) {
+        return getProxyUrl(targetUrl, api.proxyUrl)
+      }
+    }
+
+    // 2. 使用全局代理配置
+    if (proxy.enabled && proxy.proxyUrl) {
+      return getProxyUrl(targetUrl, proxy.proxyUrl)
+    }
+
+    // 3. 使用本地代理
+    return getProxyUrl(targetUrl)
+  }
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -208,7 +229,7 @@ function App() {
           }
         } else {
           const categoryUrl = `${targetApi.url}?ac=list`
-          const response = await fetch(`/proxy?url=${encodeURIComponent(categoryUrl)}`)
+          const response = await fetch(getProxyUrlWithSettings(categoryUrl, targetApi.url))
 
           if (response.ok) {
             const data = await response.json()

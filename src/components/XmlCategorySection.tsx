@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { VideoApi, VideoItem } from '@/types'
 import { useSettingStore } from '@/store/settingStore'
+import { getProxyUrl } from '@/config/api.config'
 
 interface XmlCategorySectionProps {
   category: {
@@ -112,7 +113,7 @@ export const XML_CATEGORIES = [
 
 export default function XmlCategorySection({ category, api }: XmlCategorySectionProps) {
   const navigate = useNavigate()
-  const { home } = useSettingStore()
+  const { home, proxy } = useSettingStore()
   const [videos, setVideos] = useState<VideoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(() => {
@@ -121,6 +122,22 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
   })
   const [pageCount, setPageCount] = useState(1)
   const [jumpPage, setJumpPage] = useState('')
+
+  // 获取代理 URL（优先级：视频源单独配置 > 全局配置 > 本地代理）
+  const getProxyUrlWithSettings = (targetUrl: string): string => {
+    // 1. 优先使用视频源单独配置的 proxyUrl
+    if (api?.proxyUrl) {
+      return getProxyUrl(targetUrl, api.proxyUrl)
+    }
+
+    // 2. 使用全局代理配置
+    if (proxy.enabled && proxy.proxyUrl) {
+      return getProxyUrl(targetUrl, proxy.proxyUrl)
+    }
+
+    // 3. 使用本地代理
+    return getProxyUrl(targetUrl)
+  }
 
   const gridCols = useMemo(() => getOptimalColumns(videos.length, home.posterAspectRatio), [videos.length, home.posterAspectRatio])
 
@@ -173,7 +190,7 @@ export default function XmlCategorySection({ category, api }: XmlCategorySection
         setLoading(true)
 
         const apiUrl = `${api.url}?ac=videolist&t=${category.type_id}&pg=${currentPage}&pagesize=24`
-        const response = await fetch(`/proxy?url=${encodeURIComponent(apiUrl)}`)
+        const response = await fetch(getProxyUrlWithSettings(apiUrl))
 
         if (!response.ok) {
           setVideos([])

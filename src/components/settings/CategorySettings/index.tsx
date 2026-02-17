@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSettingStore } from '@/store/settingStore'
 import { useApiStore } from '@/store/apiStore'
+import { getProxyUrl } from '@/config/api.config'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
@@ -16,12 +17,31 @@ interface Category {
 
 export default function CategorySettings() {
   const navigate = useNavigate()
-  const { home, toggleBlockedCategory, clearBlockedCategories } = useSettingStore()
+  const { home, proxy, toggleBlockedCategory, clearBlockedCategories } = useSettingStore()
   const { videoAPIs } = useApiStore()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
 
   const blockedCategories = home?.blockedCategories || []
+
+  // 获取代理 URL（优先级：视频源单独配置 > 全局配置 > 本地代理）
+  const getProxyUrlWithSettings = (targetUrl: string, apiUrl?: string): string => {
+    if (apiUrl) {
+      const api = videoAPIs.find(a => a.url === apiUrl || a.detailUrl === apiUrl)
+      // 1. 优先使用视频源单独配置的 proxyUrl
+      if (api?.proxyUrl) {
+        return getProxyUrl(targetUrl, api.proxyUrl)
+      }
+    }
+
+    // 2. 使用全局代理配置
+    if (proxy.enabled && proxy.proxyUrl) {
+      return getProxyUrl(targetUrl, proxy.proxyUrl)
+    }
+
+    // 3. 使用本地代理
+    return getProxyUrl(targetUrl)
+  }
 
   // 获取分类列表
   const fetchCategories = async () => {
@@ -63,7 +83,7 @@ export default function CategorySettings() {
       } else {
         // JSON API 获取分类
         const categoryUrl = `${targetApi.url}?ac=list`
-        const response = await fetch(`/proxy?url=${encodeURIComponent(categoryUrl)}`)
+        const response = await fetch(getProxyUrlWithSettings(categoryUrl, targetApi.url))
 
         if (response.ok) {
           const data = await response.json()
